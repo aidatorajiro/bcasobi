@@ -5,5 +5,22 @@
 <script src="WebRTCPeerConnection.js"></script>
 <script src="Blockchain.js"></script>
 <script>
-let bc = new BlockChain();
+const genesisPrivateKey = '11885baf58a8002c504d364ca5c0428e4b914d783de68d3828743580f006f762';
+const genesisPublicKey = '04ee380af9823303cc1a653c16ebe29aa6666552f649eea1136a50bed3000dc52d87f9b24e9c57fbf9d7ac34ff7eb8dbed0301fbea81dea63dcd6bf760adf13e35';
+const state = {
+  
+};
+const bc = new BlockChain([{
+  from: null,
+  to: sha256(genesisPublicKey)
+}], function (blockheader, transactions) {
+  
+}, function () {
+  return [{
+    from: null,
+    to: sha256(genesisPublicKey)
+  }];
+});
+bc.startMining();
+bc.startPeerConnection();
 </script>

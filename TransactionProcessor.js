@@ -1,4 +1,0 @@
-class TransactionProcessor {
-  constructor (blockchain) {
-  }
-}

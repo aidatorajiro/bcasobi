@@ -1,6 +1,4 @@
-const ChainStorage = require('SugoiYabaiFramework/ChainStorage');
-const TransactionProcessor = require('SugoiYabaiFramework/TransactionProcessor');
-const BlockChain = require('SugoiYabaiFramework/BlockChain');
+// normal blockchain
 
 initialParams = {
   balances: {}

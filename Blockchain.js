@@ -1,35 +1,35 @@
 const difficulty = '6666';
 const prize = '1000000000000';
 
-const genesisPrivateKey = '11885baf58a8002c504d364ca5c0428e4b914d783de68d3828743580f006f762';
-const genesisPublicKey = '04ee380af9823303cc1a653c16ebe29aa6666552f649eea1136a50bed3000dc52d87f9b24e9c57fbf9d7ac34ff7eb8dbed0301fbea81dea63dcd6bf760adf13e35';
-const genesisTransactions = [{
-  ins: [],
-  outs: [{address: sha256(genesisPublicKey), amount: prize}]
-}];
-const genesisBlockHeader = {
-  prevHash: '0000000000000000000000000000000000000000000000000000000000000000',
-  treeHash: new MerkleTree(genesisTransactions.map(hashobj), sha256).getRoot(),
-  nonce: '0'
-};
-
 /**
  * Class reprensenting a BlockChain
  * @namespace BlockChain
  */
 class BlockChain {
-  constructor () {
-    // for block management section
+  /**
+   * @desc Create a blockchain.
+   * @param {[Object]} genesisTxs - The list of genesis transactions.
+   * @param {Function} onblockadded - The event handler called on block added.
+   */
+  constructor (genesisTxs, onblockadded=(function () {}), generatecoinbasetxs=(function () {})) {
+    // transaction layer
+    this.onblockadded = onblockadded;
+    this.generatecoinbasetxs = generatecoinbasetxs;
+
+    // block layer
     this.block_headers = [];
     this.block_hashes = [];
     this.hash_to_index = {};
     this.last_block_hash = null;
-
     this.transactions = [];
 
-    this._add_block(genesisBlockHeader, genesisTransactions);
+    this._add_block({
+      prevHash: '0000000000000000000000000000000000000000000000000000000000000000',
+      treeHash: new MerkleTree(genesisTxs.map(hashobj), sha256).getRoot(),
+      nonce: '0'
+    }, genesisTxs);
 
-    // for mining section
+    // mining layer
     this.coinbase = sha256(genesisPublicKey);
     this.pending_transactions = [];
     this.miner = undefined;
@@ -48,6 +48,8 @@ class BlockChain {
     this.hash_to_index[blockHash] = this.block_headers.length - 1;
     this.last_block_hash = blockHash;
     this.transactions.push(transactions);
+
+    this.onblockadded.call(this, blockheader, transactions);
   }
 
   verifyAddBlock (blockheader, transactions) {
@@ -80,16 +82,13 @@ class BlockChain {
    * @desc Launch a mining program. If already exists, terminate old one and restart.
    * @private
    */
-  _start_miner() {
+  _restart_miner() {
     if (this.worker !== undefined) {
       this.miner.terminate();
     }
     this.miner = new Worker('miner.js');
-    const coinbasetx = {
-      ins: [],
-      outs: [{address: this.coinbase, amount: prize}]
-    };
-    const txs = [coinbasetx].concat(this.pending_transactions);
+    const coinbasetxs = this.generatecoinbasetxs.call(this);
+    const txs = coinbasetxs.concat(this.pending_transactions);
     const pending_block = {
       prevHash: this.last_block_hash,
       treeHash: new MerkleTree(txs.map(hashobj), sha256).getRoot(),
@@ -101,15 +100,32 @@ class BlockChain {
       if (!this.verifyAddBlock(pending_block, txs)) {
         throw new Error('something wrong with the miner');
       }
-      this._start_miner();
+      this.pending_transactions = [];
+      this._restart_miner();
     };
   }
 
+  /**
+   * @desc Start mining.
+   */
+  startMining () {
+    if (this.worker !== undefined) {
+      throw new Error('miner already started');
+    }
+    this._restart_miner();
+  }
+
+  /**
+   * @desc Add a pending transaction.
+   * @param {Object} tx - A transaction object.
+   */
   addPendingTransaction (tx) {
     this.pending_transactions.push(tx);
   }
 
-  removeAllPendingTransaction () {
-    this.pending_transactions = [];
+  // -----------------------
+  //     Peer Connection    
+  // -----------------------
+  startPeerConnection () {
   }
 }
