@@ -1,5 +1,4 @@
 const difficulty = '6666';
-const prize = '1000000000000';
 
 /**
  * Class reprensenting a BlockChain
@@ -10,11 +9,12 @@ class BlockChain {
    * @desc Create a blockchain.
    * @param {[Object]} genesisTxs - The list of genesis transactions.
    * @param {Function} onblockadded - The event handler called on block added.
+   * @param {Function} generatecoinbasetx - Generates the first transaction on mining.
    */
-  constructor (genesisTxs, onblockadded=(function () {}), generatecoinbasetxs=(function () {})) {
+  constructor (genesisTxs, onblockadded, generatecoinbasetx) {
     // transaction layer
     this.onblockadded = onblockadded;
-    this.generatecoinbasetxs = generatecoinbasetxs;
+    this.generatecoinbasetx = generatecoinbasetx;
 
     // block layer
     this.block_headers = [];
@@ -87,8 +87,8 @@ class BlockChain {
       this.miner.terminate();
     }
     this.miner = new Worker('miner.js');
-    const coinbasetxs = this.generatecoinbasetxs.call(this);
-    const txs = coinbasetxs.concat(this.pending_transactions);
+    const coinbasetx = this.generatecoinbasetx.call(this);
+    const txs = [coinbasetx].concat(this.pending_transactions);
     const pending_block = {
       prevHash: this.last_block_hash,
       treeHash: new MerkleTree(txs.map(hashobj), sha256).getRoot(),
