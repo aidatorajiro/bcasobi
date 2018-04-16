@@ -1,9 +1,3 @@
-function sign(priv, message) {
-  const ec = elliptic.ec('secp256k1');
-  const key = ec.keyFromPrivate(priv);
-  return key.sign(message).toDER('hex');
-}
-
 function createKeyPair() {
   const ec = elliptic.ec('secp256k1');
   const key = ec.genKeyPair();

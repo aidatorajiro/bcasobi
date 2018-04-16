@@ -14,7 +14,6 @@ class BlockChain {
   constructor (genesisTxs, onblockadded, generatecoinbasetx) {
     // transaction layer
     this.onblockadded = onblockadded;
-    this.generatecoinbasetx = generatecoinbasetx;
 
     // block layer
     this.block_headers = [];
@@ -30,7 +29,7 @@ class BlockChain {
     }, genesisTxs);
 
     // mining layer
-    this.coinbase = sha256(genesisPublicKey);
+    this.generatecoinbasetx = generatecoinbasetx;
     this.pending_transactions = [];
     this.miner = undefined;
   }
@@ -109,10 +108,21 @@ class BlockChain {
    * @desc Start mining.
    */
   startMining () {
-    if (this.worker !== undefined) {
+    if (this.miner !== undefined) {
       throw new Error('miner already started');
     }
     this._restart_miner();
+  }
+
+  /**
+   * @desc Stop mining.
+   */
+  stopMining () {
+    if (this.miner === undefined) {
+      throw new Error('miner already stopped');
+    }
+    this.miner.terminate();
+    this.miner = undefined;
   }
 
   /**
@@ -120,7 +130,11 @@ class BlockChain {
    * @param {Object} tx - A transaction object.
    */
   addPendingTransaction (tx) {
+    if (this.miner === undefined) {
+      throw new Error('miner is not running');
+    }
     this.pending_transactions.push(tx);
+    this._restart_miner();
   }
 
   // -----------------------

@@ -1,34 +1,97 @@
+<link href="https://fonts.googleapis.com/css?family=Open+Sans:400" rel="stylesheet">
+<style>
+  body, input {
+    font-family: 'Open Sans', sans-serif;
+  }
+</style>
+<div id="app">
+  残高: {{balances}}<br><br>
+  アドレス: <input v-model="addressInput" type="text" style="width:500"></input><br>
+  総金額: <input v-model.number="amountInput" type="text"></input><br>
+  <button v-on:click="send">送金</button>
+</div>
+<script src="vue.js"></script>
 <script src="sha.js"></script>
 <script src="elliptic.js"></script>
 <script src="merkle.js"></script>
 <script src="Util.js"></script>
-<script src="WebRTCPeerConnection.js"></script>
 <script src="Blockchain.js"></script>
 <script>
-const genesisPrivateKey = '11885baf58a8002c504d364ca5c0428e4b914d783de68d3828743580f006f762';
-const genesisPublicKey = '04ee380af9823303cc1a653c16ebe29aa6666552f649eea1136a50bed3000dc52d87f9b24e9c57fbf9d7ac34ff7eb8dbed0301fbea81dea63dcd6bf760adf13e35';
-const state = {
-  balances: {}
-};
+// 楕円曲線つくる
+const ec = elliptic.ec('secp256k1');
+const key = ec.genKeyPair();
+key.getPublic();
+
+const genesisPublicKey = key.pub.encode('hex');
+
+// Vueインスタンスを作る; 今回はここに残高テーブルをつくる
+const app = new Vue({
+  el: '#app',
+  methods: {
+    send: function () {
+      const messagehash = hashobj({from: sha256(genesisPublicKey), to: this.addressInput, amount: this.amountInput});
+      const sign = key.sign(messagehash);
+      bc.addPendingTransaction({
+        from: sha256(genesisPublicKey),
+        to: this.addressInput,
+        amount: this.amountInput,
+        signature: sign.toDER('hex'),
+        recoveryParam: sign.recoveryParam
+      });
+    }
+  },
+  data: {
+    addressInput: '0000000000000000000000000000000000000000000000000000000000000000',
+    amountInput: '0',
+    balances: {}
+  }
+})
+
+// 残高を増やす; Vueインスタンスの状態を変更する
+function addBalance (account, amount) {
+  if (app.balances[account] === undefined) {
+    Vue.set(app.balances, account, 0)
+  }
+  Vue.set(app.balances, account, app.balances[account] + amount)
+}
+
+// 残高を確認する
+function getBalance (account) {
+  return app.balances[account];
+}
+
+// 第一引数: 最初のブロックに含まれるトランザクション; genesis blockを構成する
+// 第二引数: 新しいブロックが追加された時に呼ばれる処理
+// 第三引数: マイニングのために、ブロックの一番最初に配置するトランザクションを生成する関数
 const bc = new BlockChain([{
-  from: 'coinbase',
+  from: '0000000000000000000000000000000000000000000000000000000000000000',
   to: sha256(genesisPublicKey),
-  amount: 1000000000,
-  signature: ''
+  amount: 1000000000
 }], function (blockheader, transactions) {
-  for (let i in transactions) {
+  for (let i = 0; i < transactions.length; i++) {
+    let tx = transactions[i];
+
+    // ブロックの最初のトランザクションの場合、固定のマイニング報酬を与える
     if (i === 0) {
-      state.balances
+      addBalance(tx.to, 1000000000);
+      continue;
+    }
+
+    // そうでない場合、署名の検証をする。署名そのものを抜いた, from to amountの順で並んでいるJSONデータのハッシュが使われる。
+    const massagehash = hashobj({from: tx.from, to: tx.to, amount: tx.amount});
+    const pub = ec.recoverPubKey(massagehash, tx.signature, tx.recoveryParam, 'hex');
+
+    if (tx.from === sha256(pub.encode('hex')) && tx.amount <= getBalance(tx.from)) {
+      addBalance(tx.from, -tx.amount);
+      addBalance(tx.to, tx.amount);
     }
   }
 }, function () {
   return {
-    from: 'coinbase',
+    from: '0000000000000000000000000000000000000000000000000000000000000000',
     to: sha256(genesisPublicKey),
-    amount: 1000000000,
-    signature: ''
+    amount: 1000000000
   };
 });
-bc.startMining();
-bc.startPeerConnection();
+//bc.startMining();
 </script>
