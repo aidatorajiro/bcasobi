@@ -12,6 +12,10 @@ function require (bool, msg) {
   }
 }
 
-function hashobj (tx) {
-  return sha256(JSON.stringify(tx));
+function hashobj (obj) {
+  return sha256(JSON.stringify(obj));
+}
+
+function hashobjArray (obj) {
+  return sha256.array(JSON.stringify(obj));
 }
