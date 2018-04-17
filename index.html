@@ -35,7 +35,10 @@ const app = new Vue({
         from: keyHash,
         to: this.addressInput,
         amount: this.amountInput,
-        signature: sign.toDER('hex'),
+        signature: {
+          r: sign.r.toString('hex'),
+          s: sign.s.toString('hex')
+        },
         recoveryParam: sign.recoveryParam
       });
     }
@@ -94,5 +97,5 @@ const bc = new BlockChain([{
   };
 });
 
-// bc.startMining();
+bc.startMining();
 </script>
