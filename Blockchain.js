@@ -82,7 +82,7 @@ class BlockChain {
    * @private
    */
   _restart_miner() {
-    if (this.worker !== undefined) {
+    if (this.miner !== undefined) {
       this.miner.terminate();
     }
     this.miner = new Worker('miner.js');

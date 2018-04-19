@@ -1,11 +1,5 @@
-<link href="https://fonts.googleapis.com/css?family=Open+Sans:400" rel="stylesheet">
-<style>
-  body, input {
-    font-family: 'Open Sans', sans-serif;
-  }
-</style>
 <div id="app">
-  残高: {{balances}}<br><br>
+  残高: {{ balances }}<br><br>
   アドレス: <input v-model="addressInput" type="text" style="width:500"></input><br>
   総金額: <input v-model.number="amountInput" type="text"></input><br>
   <button v-on:click="send">送金</button>
@@ -29,12 +23,16 @@ const app = new Vue({
   el: '#app',
   methods: {
     send: function () {
-      const messagehash = hashobjArray({from: keyHash, to: this.addressInput, amount: this.amountInput});
-      const sign = key.sign(messagehash);
-      bc.addPendingTransaction({
+      const data = {
         from: keyHash,
         to: this.addressInput,
         amount: this.amountInput,
+        nonce: this.nonce++
+      };
+      const messagehash = hashobjArray(data);
+      const sign = key.sign(messagehash);
+      bc.addPendingTransaction({
+        data,
         signature: {
           r: sign.r.toString('hex'),
           s: sign.s.toString('hex')
@@ -45,7 +43,7 @@ const app = new Vue({
   },
   data: {
     addressInput: '0000000000000000000000000000000000000000000000000000000000000000',
-    amountInput: '0',
+    amountInput: 0,
     balances: {}
   }
 })
@@ -67,33 +65,37 @@ function getBalance (account) {
 // 第二引数: 新しいブロックが追加された時に呼ばれる処理
 // 第三引数: マイニングのために、ブロックの一番最初に配置するトランザクションを生成する関数
 const bc = new BlockChain([{
-  from: '0000000000000000000000000000000000000000000000000000000000000000',
-  to: keyHash,
-  amount: 1000000000
+  data: {
+    from: '0000000000000000000000000000000000000000000000000000000000000000',
+    to: keyHash,
+    amount: 1000000000
+  }
 }], function (blockheader, transactions) {
   for (let i = 0; i < transactions.length; i++) {
     let tx = transactions[i];
 
     // ブロックの最初のトランザクションの場合、固定のマイニング報酬を与える
     if (i === 0) {
-      addBalance(tx.to, 1000000000);
+      addBalance(tx.data.to, 1000000000);
       continue;
     }
 
-    // そうでない場合、署名の検証をする。署名そのものを抜いた, from to amountの順で並んでいるJSONデータのハッシュが使われる。
-    const massagehash = hashobjArray({from: tx.from, to: tx.to, amount: tx.amount});
+    // そうでない場合、署名の検証をする。署名そのものを抜いた, from to amount nonceの順で並んでいるJSONデータのハッシュが使われる。
+    const massagehash = hashobjArray(tx.data);
     const pub = ec.recoverPubKey(massagehash, tx.signature, tx.recoveryParam);
 
-    if (tx.from === sha256(pub.encode('array')) && tx.amount <= getBalance(tx.from)) {
-      addBalance(tx.from, -tx.amount);
-      addBalance(tx.to, tx.amount);
+    if (tx.data.from === sha256(pub.encode('array')) && tx.data.amount <= getBalance(tx.data.from)) {
+      addBalance(tx.data.from, -tx.data.amount);
+      addBalance(tx.data.to  ,  tx.data.amount);
     }
   }
 }, function () {
   return {
-    from: '0000000000000000000000000000000000000000000000000000000000000000',
-    to: keyHash,
-    amount: 1000000000
+    data: {
+      from: '0000000000000000000000000000000000000000000000000000000000000000',
+      to: keyHash,
+      amount: 1000000000
+    }
   };
 });
 

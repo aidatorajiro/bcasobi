@@ -1,3 +1,5 @@
+// Copyright (C) 2015 Miguel Mota
+
 /**
  * Class reprensenting a Merkle Tree
  * @namespace MerkleTree
