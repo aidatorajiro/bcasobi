@@ -71,7 +71,7 @@ export default class BlockChain {
 
     /**
      * The state of blockchain.
-     * In default, the initial value is `undefined` and this will never be changed.
+     * In default, this is `undefined` and will never be changed.
      * You can specify the behavior to change this by overriding `this.updateState`.
      * @type {object}
      */
