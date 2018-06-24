@@ -6,27 +6,87 @@ import BN from 'bn.js'
  */
 export default class BlockChain {
   /**
-   * @desc Create a blockchain.
+   * Create a blockchain.
    */
   constructor () {
     // blocktime management
-    this.targetUpdateInterval = 100 // the number of blocks to update target
-    this.blockTime = 1000 // block time in second
-    this.target = new BN(0) // the target of blockchain
 
-    // blockchain layer
+    /**
+     * The number of blocks to update target.
+     * @type {number}
+     */
+    this.targetUpdateInterval = 100
+
+    /**
+     * The blocktime in second.
+     * @type {number}
+     */
+    this.blockTime = 1000
+
+    /**
+     * The target of blockchain.
+     * @type {BN}
+     */
+    this.target = new BN(0)
+
+    // blockchain data
+
+    /**
+     * The block height.
+     * @type {number}
+     */
     this.blockheight = 0
+
+    /**
+     * The list of block headers in chronological order.
+     * @type {object[]}
+     */
     this.block_headers = []
+
+    /**
+     * The list of block hashes in chronological order.
+     * @type {string[]}
+     */
     this.block_hashes = []
+
+    /**
+     * The hash table which maps a block hash to a block index.
+     * @type {Object.<string, number>}
+     */
     this.hash_to_index = {}
-    this.last_block_hash = null
+
+    /**
+     * The last block hash. Same as `this.block_hashes[this.blockheight - 1]`.
+     * @type {string}
+     */
+    this.last_block_hash = undefined
+
+    /**
+     * The list of transactions. `this.transactions[i][j]` represents the j-th transaction of i-th block.
+     * @type {object[][]}
+     */
     this.transactions = []
 
     // tx layer
+
+    /**
+     * The state of blockchain.
+     * In default, the initial value is `undefined` and this will never be changed.
+     * You can specify the behavior to change this by overriding `this.updateState`.
+     * @type {object}
+     */
     this.state = undefined
 
     // mining layer
+
+    /**
+     * The transactions which are waiting to be mined.
+     */
     this.pending_transactions = []
+
+    /**
+     * The web worker for mining.
+     */
     this.miner = undefined
   }
 
@@ -35,9 +95,9 @@ export default class BlockChain {
   // ----------------------
 
   /**
-   * @desc Add a block and update state.
+   * Add a block and update state.
    * @param {Object} blockheader header of the block
-   * @param {[Object]} transactions transaction list of the block
+   * @param {Object[]]} transactions transaction list of the block
    */
   addBlock (header, transactions) {
     const blockHash = this.hashHeader(header)
@@ -54,9 +114,9 @@ export default class BlockChain {
   }
 
   /**
-   * @desc Verify a block, add it, and update state.
+   * Verify a block, add it, and update state.
    * @param {Object} blockheader header of the block
-   * @param {[Object]} transactions transaction list of the block
+   * @param {Object[]]} transactions transaction list of the block
    * @returns Bool
    */
   verifyAddBlock (header, transactions) {
@@ -69,9 +129,9 @@ export default class BlockChain {
   }
 
   /**
-   * @desc Verify a block. It checks: (1) calculated minimum target < header.target < hash of the header (2) merkle hash of the transactions == header.treeHash (3) header.prevHash == last block hash
+   * Verify a block. It checks: (1) calculated minimum target < header.target < hash of the header (2) merkle hash of the transactions == header.treeHash (3) header.prevHash == last block hash
    * @param {Object} blockheader header of the block
-   * @param {[Object]} transactions transaction list of the block
+   * @param {Object[]]} transactions transaction list of the block
    * @returns Bool
    */
   verifyBlock (header, transactions) {
@@ -90,12 +150,14 @@ export default class BlockChain {
   }
 
   // -----------------------------
-  //     Difficulty Management
+  //     Blocktime Management
   // -----------------------------
 
   updateTarget () {
     if (this.blockheight % this.targetUpdateInterval === 0) {
-      
+      for (let i = this.blockheight - this.targetUpdateInterval; i < this.blockheight; i++) {
+
+      }
     }
   }
 
@@ -107,7 +169,6 @@ export default class BlockChain {
   }
 
   serializeTransaction (transaction) {
-
   }
 
   // --------------------------
@@ -115,7 +176,7 @@ export default class BlockChain {
   // --------------------------
 
   /**
-   * @desc The callback function for updating state. Only called on adding blocks.
+   * The callback function for updating state. Only called on adding blocks.
    */
   updateState () {
   }
@@ -125,7 +186,7 @@ export default class BlockChain {
   // ----------------------
 
   /**
-   * @desc Launch a mining program. If already exists, terminate old one and restart.
+   * Launch a mining program. If already exists, terminate old one and restart.
    * @private
    */
   restartMiner () {
@@ -152,7 +213,7 @@ export default class BlockChain {
   }
 
   /**
-   * @desc Start mining.
+   * Start mining.
    */
   startMining () {
     if (this.miner !== undefined) {
@@ -162,7 +223,7 @@ export default class BlockChain {
   }
 
   /**
-   * @desc Stop mining.
+   * Stop mining.
    */
   stopMining () {
     if (this.miner === undefined) {
@@ -173,7 +234,7 @@ export default class BlockChain {
   }
 
   /**
-   * @desc Add a pending transaction.
+   * Add a pending transaction.
    * @param {Object} tx - A transaction object.
    */
   addPendingTransaction (tx) {
