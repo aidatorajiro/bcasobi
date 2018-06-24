@@ -10,9 +10,9 @@ export default class BlockChain {
    */
   constructor () {
     // blocktime management
-    this.difficultyUpdateInterval = 100
-    this.
-    this.difficulty = new BN(0)
+    this.targetUpdateInterval = 100 // the number of blocks to update target
+    this.blockTime = 1000 // block time in second
+    this.target = new BN(0) // the target of blockchain
 
     // blockchain layer
     this.blockheight = 0
@@ -49,7 +49,7 @@ export default class BlockChain {
     this.transactions.push(transactions)
     this.blockheight++
 
-    this.updateDifficulty()
+    this.updateTarget()
     this.updateState()
   }
 
@@ -69,15 +69,15 @@ export default class BlockChain {
   }
 
   /**
-   * @desc Verify a block. It checks: (1) calculated minimum difficulty < header.difficulty < hash of the header (2) merkle hash of the transactions == header.treeHash (3) header.prevHash == last block hash
+   * @desc Verify a block. It checks: (1) calculated minimum target < header.target < hash of the header (2) merkle hash of the transactions == header.treeHash (3) header.prevHash == last block hash
    * @param {Object} blockheader header of the block
    * @param {[Object]} transactions transaction list of the block
    * @returns Bool
    */
   verifyBlock (header, transactions) {
-    let d = new BN(header.difficulty, 16)
+    let d = new BN(header.target, 16)
     let h = new BN(this.hashHeader(header), 16)
-    if (d.gt(this.difficulty) && h.gt(d)) {
+    if (d.gt(this.target) && h.gt(d)) {
       return false
     }
     if (this.merkleHash(transactions.map(this.hashTransaction)).getRoot() !== header.treeHash) {
@@ -90,11 +90,11 @@ export default class BlockChain {
   }
 
   // -----------------------------
-  //   Difficulty Management
+  //     Difficulty Management
   // -----------------------------
 
-  updateDifficulty () {
-    if (this.blockheight % this.difficultyUpdateInterval === 0) {
+  updateTarget () {
+    if (this.blockheight % this.targetUpdateInterval === 0) {
       
     }
   }
@@ -140,7 +140,7 @@ export default class BlockChain {
       treeHash: new MerkleTree(txs.map(this.hashTransaction), sha256).getRoot(),
       nonce: '0'
     }
-    this.miner.postMessage({header: pendingBlock, difficulty: this.difficulty})
+    this.miner.postMessage({header: pendingBlock, target: this.target})
     this.miner.onmessage = (e) => {
       pendingBlock.nonce = e.data
       if (!this.verifyAddBlock(pendingBlock, txs)) {
