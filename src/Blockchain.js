@@ -9,7 +9,13 @@ export default class BlockChain {
    * @desc Create a blockchain.
    */
   constructor () {
-    // block layer
+    // blocktime management
+    this.difficultyUpdateInterval = 100
+    this.
+    this.difficulty = new BN(0)
+
+    // blockchain layer
+    this.blockheight = 0
     this.block_headers = []
     this.block_hashes = []
     this.hash_to_index = {}
@@ -33,15 +39,17 @@ export default class BlockChain {
    * @param {Object} blockheader header of the block
    * @param {[Object]} transactions transaction list of the block
    */
-  addBlock (blockheader, transactions) {
-    const blockHash = this.hashBlockHeader(blockheader)
+  addBlock (header, transactions) {
+    const blockHash = this.hashHeader(header)
 
-    this.block_headers.push(blockheader)
+    this.block_headers.push(header)
     this.block_hashes.push(blockHash)
-    this.hash_to_index[blockHash] = this.block_headers.length - 1
+    this.hash_to_index[blockHash] = this.blockheight
     this.last_block_hash = blockHash
     this.transactions.push(transactions)
+    this.blockheight++
 
+    this.updateDifficulty()
     this.updateState()
   }
 
@@ -51,32 +59,59 @@ export default class BlockChain {
    * @param {[Object]} transactions transaction list of the block
    * @returns Bool
    */
-  verifyAddBlock (blockheader, transactions) {
-    if (this.verifyBlock(blockheader, transactions)) {
-      this._add_block(blockheader, transactions)
+  verifyAddBlock (header, transactions) {
+    if (this.verifyBlock(header, transactions)) {
+      this._add_block(header, transactions)
       return true
     } else {
       return false
     }
   }
 
-  verifyBlock (blockheader, transactions) {
-    let d = new BN(blockheader.difficulty, 16)
-    let h = new BN(this.hashBlockHeader(blockheader), 16)
-    if (h.gt(d)) {
+  /**
+   * @desc Verify a block. It checks: (1) calculated minimum difficulty < header.difficulty < hash of the header (2) merkle hash of the transactions == header.treeHash (3) header.prevHash == last block hash
+   * @param {Object} blockheader header of the block
+   * @param {[Object]} transactions transaction list of the block
+   * @returns Bool
+   */
+  verifyBlock (header, transactions) {
+    let d = new BN(header.difficulty, 16)
+    let h = new BN(this.hashHeader(header), 16)
+    if (d.gt(this.difficulty) && h.gt(d)) {
       return false
     }
-    if (this.merkleHash(transactions.map(this.hashTransaction)).getRoot() !== blockheader.treeHash) {
+    if (this.merkleHash(transactions.map(this.hashTransaction)).getRoot() !== header.treeHash) {
       return false
     }
-    if (blockheader.prevHash !== this.last_block_hash) {
+    if (header.prevHash !== this.last_block_hash) {
       return false
     }
     return true
   }
 
+  // -----------------------------
+  //   Difficulty Management
+  // -----------------------------
+
+  updateDifficulty () {
+    if (this.blockheight % this.difficultyUpdateInterval === 0) {
+      
+    }
+  }
+
+  // -----------------------------
+  //   Serialization And Hashing
+  // -----------------------------
+
+  serializeHeader (header) {
+  }
+
+  serializeTransaction (transaction) {
+
+  }
+
   // --------------------------
-  //   Transaction Magagement
+  //   Transaction Processing
   // --------------------------
 
   /**
@@ -100,15 +135,15 @@ export default class BlockChain {
     this.miner = new Worker('miner.js')
     const coinbasetx = this.generatecoinbasetx.call(this)
     const txs = [coinbasetx].concat(this.pending_transactions)
-    const pending_block = {
+    const pendingBlock = {
       prevHash: this.last_block_hash,
       treeHash: new MerkleTree(txs.map(this.hashTransaction), sha256).getRoot(),
       nonce: '0'
     }
-    this.miner.postMessage({blockheader: pending_block, difficulty: difficulty})
+    this.miner.postMessage({header: pendingBlock, difficulty: this.difficulty})
     this.miner.onmessage = (e) => {
-      pending_block.nonce = e.data
-      if (!this.verifyAddBlock(pending_block, txs)) {
+      pendingBlock.nonce = e.data
+      if (!this.verifyAddBlock(pendingBlock, txs)) {
         throw new Error('something wrong with the miner')
       }
       this.pending_transactions = []
