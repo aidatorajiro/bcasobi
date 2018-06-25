@@ -97,7 +97,7 @@ export default class BlockChain {
   /**
    * Add a block and update state.
    * @param {Object} blockheader header of the block
-   * @param {Object[]]} transactions transaction list of the block
+   * @param {Object[]} transactions transaction list of the block
    */
   addBlock (header, transactions) {
     const blockHash = this.hashHeader(header)
@@ -116,7 +116,7 @@ export default class BlockChain {
   /**
    * Verify a block, add it, and update state.
    * @param {Object} blockheader header of the block
-   * @param {Object[]]} transactions transaction list of the block
+   * @param {Object[]} transactions transaction list of the block
    * @returns Bool
    */
   verifyAddBlock (header, transactions) {
@@ -131,7 +131,7 @@ export default class BlockChain {
   /**
    * Verify a block. It checks: (1) calculated minimum target < header.target < hash of the header (2) merkle hash of the transactions == header.treeHash (3) header.prevHash == last block hash
    * @param {Object} blockheader header of the block
-   * @param {Object[]]} transactions transaction list of the block
+   * @param {Object[]} transactions transaction list of the block
    * @returns Bool
    */
   verifyBlock (header, transactions) {
@@ -187,7 +187,6 @@ export default class BlockChain {
 
   /**
    * Launch a mining program. If already exists, terminate old one and restart.
-   * @private
    */
   restartMiner () {
     if (this.miner !== undefined) {
