@@ -135,9 +135,9 @@ export default class BlockChain {
    * @returns Bool
    */
   verifyBlock (header, transactions) {
-    let hash_as_bn = new BN(this.hashHeader(header), 16)
-    let block_target = new BN(header.target, 16)
-    if (!(hash_as_bn.gt(this.target) && block_target.gt(hash_as_bn))) {
+    let hashAsBN = new BN(this.hashHeader(header), 16)
+    let blockTarget = new BN(header.target, 16)
+    if (!(hashAsBN.gt(this.target) && blockTarget.gt(hashAsBN))) {
       return false
     }
     if (!(this.merkleHash(transactions.map(this.hashTransaction)).getRoot() === header.treeHash)) {
@@ -146,9 +146,9 @@ export default class BlockChain {
     if (!(header.prevHash === this.last_block_hash)) {
       return false
     }
-    let last_block_time = this.block_headers[this.block_headers.length - 1].blockTime
-    let max_block_time = new Date().getTime() + this.blockTimeTolerance
-    if (!(last_block_time < header.blockTime && header.blockTime < max_block_time)) {
+    let lastBlockTime = this.block_headers[this.blockheight - 1].blockTime
+    let maxBlockTime = new Date().getTime() + this.blockTimeTolerance
+    if (!(lastBlockTime < header.blockTime && header.blockTime < maxBlockTime)) {
       return false
     }
     return true
@@ -160,9 +160,7 @@ export default class BlockChain {
 
   updateTarget () {
     if (this.blockheight % this.targetUpdateInterval === 0) {
-      for (let i = this.blockheight - this.targetUpdateInterval; i < this.blockheight; i++) {
-        this.[i]
-      }
+      this.block_headers[this.blockheight - this.targetUpdateInterval].blockTime - this.block_headers[this.blockheight - 1]
     }
   }
 
