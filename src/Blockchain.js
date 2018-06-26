@@ -18,7 +18,7 @@ export default class BlockChain {
     this.targetUpdateInterval = 100
 
     /**
-     * The blocktime in second.
+     * The blocktime in seconds.
      * @type {number}
      */
     this.blockTime = 1000
