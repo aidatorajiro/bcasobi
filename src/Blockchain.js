@@ -1,4 +1,4 @@
-import BN from 'bn.js'
+import BigNumber from 'bignumber.js'
 
 /**
  * Class reprensenting a BlockChain
@@ -25,9 +25,9 @@ export default class BlockChain {
 
     /**
      * The current minimum target requirement for a block.
-     * @type {BN}
+     * @type {BigNumber}
      */
-    this.target = new BN(0)
+    this.target = new BigNumber(0)
 
     // blockchain data
 
@@ -135,9 +135,9 @@ export default class BlockChain {
    * @returns Bool
    */
   verifyBlock (header, transactions) {
-    let hashAsBN = new BN(this.hashHeader(header), 16)
-    let blockTarget = new BN(header.target, 16)
-    if (!(hashAsBN.gt(this.target) && blockTarget.gt(hashAsBN))) {
+    let hashAsNumber = new BigNumber(this.hashHeader(header), 16)
+    let blockTarget = new BigNumber(header.target, 16)
+    if (!(hashAsNumber.gt(this.target) && blockTarget.gt(hashAsNumber))) {
       return false
     }
     if (!(this.merkleHash(transactions.map(this.hashTransaction)).getRoot() === header.treeHash)) {
@@ -160,7 +160,8 @@ export default class BlockChain {
 
   updateTarget () {
     if (this.blockheight % this.targetUpdateInterval === 0) {
-      this.block_headers[this.blockheight - this.targetUpdateInterval].blockTime - this.block_headers[this.blockheight - 1]
+      let diff = this.block_headers[this.blockheight - 1].blockTime - this.block_headers[this.blockheight - this.targetUpdateInterval].blockTime
+      this.target = this.target.div(this.blockTime / diff / this.targetUpdateInterval).integerValue()
     }
   }
 

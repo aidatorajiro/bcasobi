@@ -11,6 +11,7 @@
   "author": "Torajiro Aida",
   "license": "MIT",
   "dependencies": {
+    "bignumber.js": "^7.2.1",
     "flatbuffers": "^1.9.0",
     "jest": "^23.1.0",
     "standard": "^11.0.1",
