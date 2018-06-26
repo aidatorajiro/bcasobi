@@ -146,7 +146,9 @@ export default class BlockChain {
     if (!(header.prevHash === this.last_block_hash)) {
       return false
     }
-    if (!(this.block_headers[this.block_headers.length - 1] < header.blockTime && header.blockTime < new Date().getTime() + this.blockTimeTolerance)) {
+    let last_block_time = this.block_headers[this.block_headers.length - 1].blockTime
+    let max_block_time = new Date().getTime() + this.blockTimeTolerance
+    if (!(last_block_time < header.blockTime && header.blockTime < max_block_time)) {
       return false
     }
     return true
