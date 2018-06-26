@@ -129,21 +129,24 @@ export default class BlockChain {
   }
 
   /**
-   * Verify a block. It checks: (1) calculated minimum target < hash of the header < header.target (2) header.treeHash == merkle hash of the transactions (3) header.prevHash == last block hash (4) header.timestamp < block time tolerance + unix time
+   * Verify a block. It checks: (1) calculated minimum target < hash of the header < header.target (2) header.treeHash == merkle hash of the transactions (3) header.prevHash == last block hash (4) last block time < header.blockTime < block time tolerance + unix time
    * @param {Object} blockheader header of the block
    * @param {Object[]} transactions transaction list of the block
    * @returns Bool
    */
   verifyBlock (header, transactions) {
-    let d = new BN(header.target, 16)
     let h = new BN(this.hashHeader(header), 16)
-    if (d.gt(this.target) && h.gt(d)) {
+    let d = new BN(header.target, 16)
+    if (!(h.gt(this.target) && d.gt(h))) {
       return false
     }
-    if (this.merkleHash(transactions.map(this.hashTransaction)).getRoot() !== header.treeHash) {
+    if (!(this.merkleHash(transactions.map(this.hashTransaction)).getRoot() === header.treeHash)) {
       return false
     }
-    if (header.prevHash !== this.last_block_hash) {
+    if (!(header.prevHash === this.last_block_hash)) {
+      return false
+    }
+    if (!(this.block_headers[this.block_headers.length - 1] < header.blockTime && header.blockTime < new Date().getTime() + this.blockTimeTolerance)) {
       return false
     }
     return true
