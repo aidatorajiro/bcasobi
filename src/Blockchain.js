@@ -24,6 +24,12 @@ export default class BlockChain {
     this.blockTime = 1000
 
     /**
+     * The block timestamp tolerance in seconds.
+     * @type {number}
+     */
+    this.timestampTolerance = 900
+
+    /**
      * The current minimum target requirement for a block.
      * @type {BigNumber}
      */
@@ -129,7 +135,7 @@ export default class BlockChain {
   }
 
   /**
-   * Verify a block. It checks: (1) calculated minimum target < hash of the header < header.target (2) header.treeHash == merkle hash of the transactions (3) header.prevHash == last block hash (4) last block time < header.blockTime < block time tolerance + unix time
+   * Verify a block. It checks: (1) calculated minimum target < hash of the header < header.target (2) header.treeHash == merkle hash of the transactions (3) header.prevHash == last block hash (4) last timestamp < header.timestamp < timestamp tolerance + unix time
    * @param {Object} blockheader header of the block
    * @param {Object[]} transactions transaction list of the block
    * @returns Bool
@@ -146,9 +152,9 @@ export default class BlockChain {
     if (!(header.prevHash === this.last_block_hash)) {
       return false
     }
-    let lastBlockTime = this.block_headers[this.blockheight - 1].blockTime
-    let maxBlockTime = new Date().getTime() + this.blockTimeTolerance
-    if (!(lastBlockTime < header.blockTime && header.blockTime < maxBlockTime)) {
+    let lastTimestamp = this.block_headers[this.blockheight - 1].timestamp
+    let maxTimestamp = new Date().getTime() + this.timestampTolerance
+    if (!(lastTimestamp < header.timestamp && header.timestamp < maxTimestamp)) {
       return false
     }
     return true
