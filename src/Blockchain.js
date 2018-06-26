@@ -129,7 +129,7 @@ export default class BlockChain {
   }
 
   /**
-   * Verify a block. It checks: (1) calculated minimum target < header.target < hash of the header (2) merkle hash of the transactions == header.treeHash (3) header.prevHash == last block hash
+   * Verify a block. It checks: (1) calculated minimum target < hash of the header < header.target (2) header.treeHash == merkle hash of the transactions (3) header.prevHash == last block hash (4) header.timestamp < block time tolerance + unix time
    * @param {Object} blockheader header of the block
    * @param {Object[]} transactions transaction list of the block
    * @returns Bool
@@ -156,7 +156,7 @@ export default class BlockChain {
   updateTarget () {
     if (this.blockheight % this.targetUpdateInterval === 0) {
       for (let i = this.blockheight - this.targetUpdateInterval; i < this.blockheight; i++) {
-
+        this.[i]
       }
     }
   }
