@@ -24,7 +24,7 @@ export default class BlockChain {
     this.blockTime = 1000
 
     /**
-     * The target of blockchain.
+     * The current minimum target requirement for a block.
      * @type {BN}
      */
     this.target = new BN(0)
@@ -135,9 +135,9 @@ export default class BlockChain {
    * @returns Bool
    */
   verifyBlock (header, transactions) {
-    let h = new BN(this.hashHeader(header), 16)
-    let d = new BN(header.target, 16)
-    if (!(h.gt(this.target) && d.gt(h))) {
+    let hash_as_bn = new BN(this.hashHeader(header), 16)
+    let block_target = new BN(header.target, 16)
+    if (!(hash_as_bn.gt(this.target) && block_target.gt(hash_as_bn))) {
       return false
     }
     if (!(this.merkleHash(transactions.map(this.hashTransaction)).getRoot() === header.treeHash)) {
