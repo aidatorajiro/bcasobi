@@ -38,7 +38,7 @@ export default class BlockChain {
     // blockchain data
 
     /**
-     * The block height.
+     * The block height. Equals to this.block_headers.length.
      * @type {number}
      */
     this.blockheight = 0
