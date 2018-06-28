@@ -33,7 +33,7 @@ export default class BlockChain {
      * The current minimum target requirement for a block.
      * @type {BigNumber}
      */
-    this.target = new BigNumber(0)
+    this.target = new BigNumber(1).shl(256)
 
     // blockchain data
 
