@@ -135,7 +135,11 @@ export default class BlockChain {
   }
 
   /**
-   * Verify a block. It checks: (1) calculated minimum target < hash of the header < header.target (2) header.treeHash == merkle hash of the transactions (3) header.prevHash == last block hash (4) last timestamp < header.timestamp < timestamp tolerance + unix time
+   * Verify a block. It checks:
+   * (1) calculated minimum target < hash of the header < header.target
+   * (2) header.treeHash == merkle hash of the transactions
+   * (3) header.prevHash == last block hash
+   * (4) last timestamp < header.timestamp < timestamp tolerance + unix time
    * @param {Object} blockheader header of the block
    * @param {Object[]} transactions transaction list of the block
    * @returns Bool
@@ -257,6 +261,10 @@ export default class BlockChain {
   // -----------------------
   //     Peer Connection
   // -----------------------
+  /**
+   * Start the peer connection. The protocl is as following:
+   * 
+   */
   startPeerConnection () {
   }
 }
