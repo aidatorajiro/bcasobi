@@ -150,7 +150,7 @@ export default class BlockChain {
     if (!(hashAsNumber.gt(this.target) && blockTarget.gt(hashAsNumber))) {
       return false
     }
-    if (!(this.merkleHash(transactions.map(this.hashTransaction)).getRoot() === header.treeHash)) {
+    if (!(this.hashTransactions(transactions) === header.treeHash)) {
       return false
     }
     if (!(header.prevHash === this.last_block_hash)) {
@@ -185,6 +185,9 @@ export default class BlockChain {
   serializeTransaction (transaction) {
   }
 
+  hashTransactions (txs) {
+  }
+
   // --------------------------
   //   Transaction Processing
   // --------------------------
@@ -211,7 +214,7 @@ export default class BlockChain {
     const txs = [coinbasetx].concat(this.pending_transactions)
     const pendingBlock = {
       prevHash: this.last_block_hash,
-      treeHash: new MerkleTree(txs.map(this.hashTransaction), sha256).getRoot(),
+      treeHash: this.hashTransactions(txs),
       nonce: undefined
     }
     this.miner.postMessage({header: pendingBlock, target: this.target})
