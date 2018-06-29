@@ -207,12 +207,12 @@ export default class BlockChain {
       this.miner.terminate()
     }
     this.miner = new Worker('miner.js')
-    const coinbasetx = this.generatecoinbasetx.call(this)
+    const coinbasetx = this.generateCoinbaseTx()
     const txs = [coinbasetx].concat(this.pending_transactions)
     const pendingBlock = {
       prevHash: this.last_block_hash,
       treeHash: new MerkleTree(txs.map(this.hashTransaction), sha256).getRoot(),
-      nonce: '0'
+      nonce: undefined
     }
     this.miner.postMessage({header: pendingBlock, target: this.target})
     this.miner.onmessage = (e) => {
