@@ -224,7 +224,7 @@ export default class BlockChain {
         throw new Error('something wrong with the miner')
       }
       this.pending_transactions = []
-      this._restart_miner()
+      this.restartMiner()
     }
   }
 
@@ -235,7 +235,7 @@ export default class BlockChain {
     if (this.miner !== undefined) {
       throw new Error('miner already started')
     }
-    this._restart_miner()
+    this.restartMiner()
   }
 
   /**
@@ -258,7 +258,7 @@ export default class BlockChain {
       throw new Error('miner is not running')
     }
     this.pending_transactions.push(tx)
-    this._restart_miner()
+    this.restartMiner()
   }
 
   // -----------------------
