@@ -102,7 +102,7 @@ export default class BlockChain {
 
   /**
    * Add a block and update state.
-   * @param {Object} blockheader header of the block
+   * @param {Object} header header of the block
    * @param {Object[]} transactions transactions of the block
    */
   addBlock (header, transactions) {
@@ -121,7 +121,7 @@ export default class BlockChain {
 
   /**
    * Verify a block, add it, and update state.
-   * @param {Object} blockheader header of the block
+   * @param {Object} header header of the block
    * @param {Object[]} transactions transaction list of the block
    * @returns Bool
    */
@@ -140,7 +140,7 @@ export default class BlockChain {
    * 2. header.treeHash == merkle hash of the transactions
    * 3. header.prevHash == last block hash
    * 4. last timestamp < header.timestamp < timestamp tolerance + current unix time
-   * @param {Object} blockheader header of the block
+   * @param {Object} header header of the block
    * @param {Object[]} transactions transaction list of the block
    * @returns Bool
    */
