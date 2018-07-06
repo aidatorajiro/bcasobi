@@ -103,7 +103,7 @@ export default class BlockChain {
   /**
    * Add a block and update state.
    * @param {Object} blockheader header of the block
-   * @param {Object[]} transactions transaction list of the block
+   * @param {Object[]} transactions transactions of the block
    */
   addBlock (header, transactions) {
     const blockHash = this.hashHeader(header)
