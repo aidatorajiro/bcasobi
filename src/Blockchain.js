@@ -265,6 +265,13 @@ export default class BlockChain {
   //     Peer Connection
   // -----------------------
   /**
+   * 
+   */
+  syncBlocks () {
+    
+  }
+
+  /**
    * Start the peer connection. The protocl is as following:
    * 
    */
