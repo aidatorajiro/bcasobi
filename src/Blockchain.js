@@ -188,6 +188,12 @@ export default class BlockChain {
   hashTransactions (txs) {
   }
 
+  hashTransaction (tx) {
+  }
+
+  hashString (string) {
+  }
+
   // --------------------------
   //   Transaction Processing
   // --------------------------
