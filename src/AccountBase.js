@@ -12,7 +12,7 @@ export default class AccountBase extends BlockChain {
     let transactions = this.transactions[this.transactions.length - 1]
     for (let i = 0; i < transactions.length; i++) {
       let tx = transactions[i]
-      // Give mining rewards to the miner
+      // Give rewards to the miner
       if (i === 0) {
         this.state[tx.to].add('1000000000')
         continue
