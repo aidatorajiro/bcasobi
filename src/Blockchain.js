@@ -1,8 +1,12 @@
+/* global Worker */
+
 import BigNumber from 'bignumber.js'
 
 /**
  * Class reprensenting a BlockChain
  * @namespace BlockChain
+ * @typedef {Object} Transaction
+ * @typedef {Object} BlockHeader
  */
 export default class BlockChain {
   /**
@@ -45,7 +49,7 @@ export default class BlockChain {
 
     /**
      * The list of block headers in chronological order.
-     * @type {object[]}
+     * @type {BlockHeader[]}
      */
     this.block_headers = []
 
@@ -68,8 +72,8 @@ export default class BlockChain {
     this.last_block_hash = undefined
 
     /**
-     * The list of transactions. `this.transactions[i][j]` represents the j-th transaction of i-th block.
-     * @type {object[][]}
+     * The matrix of transactions. `this.transactions[i][j]` represents the j-th transaction of i-th block.
+     * @type {Transaction[][]}
      */
     this.transactions = []
 
@@ -79,19 +83,21 @@ export default class BlockChain {
      * The state of blockchain.
      * In default, this is `undefined` and will never be changed.
      * You can specify the behavior to change this by overriding `this.updateState`.
-     * @type {object}
+     * @type {Object}
      */
-    this.state = undefined
+    this.state = {}
 
     // mining layer
 
     /**
      * The transactions which are waiting to be mined.
+     * @type {Transaction[]}
      */
     this.pending_transactions = []
 
     /**
      * The web worker for mining.
+     * @type {Worker}
      */
     this.miner = undefined
   }
@@ -102,8 +108,8 @@ export default class BlockChain {
 
   /**
    * Add a block and update state.
-   * @param {Object} header header of the block
-   * @param {Object[]} transactions transactions of the block
+   * @param {BlockHeader} header header of the block
+   * @param {Transaction[]} transactions transactions of the block
    */
   addBlock (header, transactions) {
     const blockHash = this.hashHeader(header)
@@ -121,8 +127,8 @@ export default class BlockChain {
 
   /**
    * Verify a block, add it, and update state.
-   * @param {Object} header header of the block
-   * @param {Object[]} transactions transaction list of the block
+   * @param {BlockHeader} header header of the block
+   * @param {Transaction[]} transactions transaction list of the block
    * @returns Bool
    */
   verifyAddBlock (header, transactions) {
@@ -140,8 +146,8 @@ export default class BlockChain {
    * 2. header.treeHash == merkle hash of the transactions
    * 3. header.prevHash == last block hash
    * 4. last timestamp < header.timestamp < timestamp tolerance + current unix time
-   * @param {Object} header header of the block
-   * @param {Object[]} transactions transaction list of the block
+   * @param {BlockHeader} header header of the block
+   * @param {Transaction[]} transactions transaction list of the block
    * @returns Bool
    */
   verifyBlock (header, transactions) {
@@ -215,7 +221,7 @@ export default class BlockChain {
     if (this.miner !== undefined) {
       this.miner.terminate()
     }
-    this.miner = new Worker('miner.js')
+    this.miner = new Worker('workers/miner.js')
     const coinbasetx = this.generateCoinbaseTx()
     const txs = [coinbasetx].concat(this.pending_transactions)
     const pendingBlock = {
@@ -257,7 +263,7 @@ export default class BlockChain {
 
   /**
    * Add a pending transaction.
-   * @param {Object} tx - A transaction object.
+   * @param {Transaction} tx A transaction object.
    */
   addPendingTransaction (tx) {
     if (this.miner === undefined) {
@@ -271,15 +277,17 @@ export default class BlockChain {
   //     Peer Connection
   // -----------------------
   /**
-   * 
+   * Calculate total difficulty.
+   * @param {BlockHeader[]} blockheaders
+   * @returns {BigNumber} totalDifficulty
    */
-  syncBlocks () {
+  calculateTotalDifficulty () {
     
   }
 
   /**
-   * Start the peer connection. The protocl is as following:
-   * 
+   * Start peer connections. The protocl is as following:
+   * 1. 
    */
   startPeerConnection () {
   }
