@@ -153,7 +153,7 @@ export default class BlockChain {
   verifyBlock (header, transactions) {
     let hashAsNumber = new BigNumber(this.hashHeader(header), 16)
     let blockTarget = new BigNumber(header.target, 16)
-    if (!(hashAsNumber.gt(this.target) && blockTarget.gt(hashAsNumber))) {
+    if (!(this.target.gt(blockTarget) && blockTarget.gt(hashAsNumber))) {
       return false
     }
     if (!(this.hashTransactions(transactions) === header.treeHash)) {
@@ -290,5 +290,6 @@ export default class BlockChain {
    * 1. 
    */
   startPeerConnection () {
+
   }
 }
