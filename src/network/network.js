@@ -1,8 +1,9 @@
 /* 
  * Usage (A simple paxos implementation):
  * ```
- * let = new Peer('validator')
- *
+ * let v = peer('validator')
+ * let c = peer('client')
+ * v.inputs.
  * ```
  */
 
