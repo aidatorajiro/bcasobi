@@ -3,11 +3,13 @@
  * ```
  * let v = peer('validator')
  * let c = peer('client')
- * v.inputs.
+ * v.state('', 'number')
+ * v.state('', 'number')
  * ```
  */
 
 export class Peer () {
+  
 }
 
 /*

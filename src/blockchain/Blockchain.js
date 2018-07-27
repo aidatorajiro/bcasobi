@@ -221,7 +221,7 @@ export default class BlockChain {
     if (this.miner !== undefined) {
       this.miner.terminate()
     }
-    this.miner = new Worker('workers/miner.js')
+    this.miner = new Worker('../workers/miner.js')
     const coinbasetx = this.generateCoinbaseTx()
     const txs = [coinbasetx].concat(this.pending_transactions)
     const pendingBlock = {
