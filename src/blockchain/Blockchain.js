@@ -284,12 +284,4 @@ export default class BlockChain {
   calculateTotalDifficulty () {
     
   }
-
-  /**
-   * Start peer connections. The protocl is as following:
-   * 1. 
-   */
-  startPeerConnection () {
-
-  }
 }
