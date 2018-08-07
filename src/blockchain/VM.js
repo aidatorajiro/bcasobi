@@ -4,6 +4,6 @@
 export default class VM {
   registerOpcode () {
   }
-  computeGas () {
+  compute () {
   }
 }
