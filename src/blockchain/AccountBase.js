@@ -1,4 +1,4 @@
-import BlockChain from 'Blockchain.js'
+import BlockChain from './Blockchain.js'
 import { ec as EC } from 'elliptic'
 
 let ec = new EC('secp256k1')

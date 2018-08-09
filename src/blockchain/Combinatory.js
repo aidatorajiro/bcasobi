@@ -1,5 +1,4 @@
-
-import BlockChain from 'Blockchain.js'
+import BlockChain from './Blockchain.js'
 
 export default class Combinatory extends BlockChain {
   updateState () {
