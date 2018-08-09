@@ -1,6 +1,9 @@
 /* global Worker */
 
 import BigNumber from 'bignumber.js'
+import MerkleTree from 'MerkleTree'
+import protobuf from 'protobufjs'
+import Util from 'Util'
 
 /**
  * Class reprensenting a BlockChain
@@ -42,31 +45,31 @@ export default class BlockChain {
     // blockchain data
 
     /**
-     * The block height. Equals to this.block_headers.length.
+     * The block height. Equals to this.blockHeaders.length.
      * @type {number}
      */
-    this.blockheight = 0
+    this.blockHeight = 0
 
     /**
      * The list of block headers in chronological order.
      * @type {BlockHeader[]}
      */
-    this.block_headers = []
+    this.blockHeaders = []
 
     /**
      * The list of block hashes in chronological order.
      * @type {string[]}
      */
-    this.block_hashes = []
+    this.blockHashes = []
 
     /**
      * The hash table which maps a block hash to a block index.
      * @type {Object.<string, number>}
      */
-    this.hash_to_index = {}
+    this.hashToIndex = {}
 
     /**
-     * The last block hash. Same as `this.block_hashes[this.blockheight - 1]`.
+     * The last block hash. Same as `this.blockHashes[this.blockHeight - 1]`.
      * @type {string}
      */
     this.last_block_hash = undefined
@@ -93,7 +96,7 @@ export default class BlockChain {
      * The transactions which are waiting to be mined.
      * @type {Transaction[]}
      */
-    this.pending_transactions = []
+    this.pendingTransactions = []
 
     /**
      * The web worker for mining.
@@ -114,12 +117,12 @@ export default class BlockChain {
   addBlock (header, transactions) {
     const blockHash = this.hashHeader(header)
 
-    this.block_headers.push(header)
-    this.block_hashes.push(blockHash)
-    this.hash_to_index[blockHash] = this.blockheight
+    this.blockHeaders.push(header)
+    this.blockHashes.push(blockHash)
+    this.hashToIndex[blockHash] = this.blockHeight
     this.last_block_hash = blockHash
     this.transactions.push(transactions)
-    this.blockheight++
+    this.blockHeight++
 
     this.updateTarget()
     this.updateState()
@@ -153,6 +156,9 @@ export default class BlockChain {
   verifyBlock (header, transactions) {
     let hashAsNumber = new BigNumber(this.hashHeader(header), 16)
     let blockTarget = new BigNumber(header.target, 16)
+    if (header.blockHeight === this.blockHeight) {
+      return false
+    }
     if (!(this.target.gt(blockTarget) && blockTarget.gt(hashAsNumber))) {
       return false
     }
@@ -162,7 +168,7 @@ export default class BlockChain {
     if (!(header.prevHash === this.last_block_hash)) {
       return false
     }
-    let lastTimestamp = this.block_headers[this.blockheight - 1].timestamp
+    let lastTimestamp = this.blockHeaders[this.blockHeight - 1].timestamp
     let maxTimestamp = new Date().getTime() + this.timestampTolerance
     if (!(lastTimestamp < header.timestamp && header.timestamp < maxTimestamp)) {
       return false
@@ -175,8 +181,8 @@ export default class BlockChain {
   // -----------------------------
 
   updateTarget () {
-    if (this.blockheight % this.targetUpdateInterval === 0) {
-      let diff = this.block_headers[this.blockheight - 1].blockTime - this.block_headers[this.blockheight - this.targetUpdateInterval].blockTime
+    if (this.blockHeight % this.targetUpdateInterval === 0) {
+      let diff = this.blockHeaders[this.blockHeight - 1].blockTime - this.blockHeaders[this.blockHeight - this.targetUpdateInterval].blockTime
       this.target = this.target.div(this.blockTime / diff / this.targetUpdateInterval).integerValue()
     }
   }
@@ -185,19 +191,16 @@ export default class BlockChain {
   //   Data Structure, Serialization And Hashing
   // ---------------------------------------------
 
-  serializeHeader (header) {
-  }
-
-  serializeTransaction (transaction) {
-  }
-
   hashTransactions (txs) {
+    return new MerkleTree(txs.map(this.hashTransaction), this.hashTransaction)
   }
 
   hashTransaction (tx) {
+    return Util.sha256(JSON.stringify(tx))
   }
 
-  hashString (string) {
+  hashHeader (header) {
+    return Util.sha256(JSON.stringify(header))
   }
 
   // --------------------------
@@ -223,7 +226,7 @@ export default class BlockChain {
     }
     this.miner = new Worker('../workers/miner.js')
     const coinbasetx = this.generateCoinbaseTx()
-    const txs = [coinbasetx].concat(this.pending_transactions)
+    const txs = [coinbasetx].concat(this.pendingTransactions)
     const pendingBlock = {
       prevHash: this.last_block_hash,
       treeHash: this.hashTransactions(txs),
@@ -235,7 +238,7 @@ export default class BlockChain {
       if (!this.verifyAddBlock(pendingBlock, txs)) {
         throw new Error('something wrong with the miner')
       }
-      this.pending_transactions = []
+      this.pendingTransactions = []
       this.restartMiner()
     }
   }
@@ -269,7 +272,7 @@ export default class BlockChain {
     if (this.miner === undefined) {
       throw new Error('miner is not running')
     }
-    this.pending_transactions.push(tx)
+    this.pendingTransactions.push(tx)
     this.restartMiner()
   }
 
@@ -282,6 +285,6 @@ export default class BlockChain {
    * @returns {BigNumber} totalDifficulty
    */
   calculateTotalDifficulty () {
-    
+
   }
 }
