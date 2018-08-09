@@ -17,5 +17,9 @@ export class Peer () {
  * @member 
  */
 export class Network () {
-  
+  constructor () {
+    this.peer = new SimplePeer()
+    peer.on('connect', () => {
+    })
+  }
 }
