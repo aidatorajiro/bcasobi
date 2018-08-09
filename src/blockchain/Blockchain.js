@@ -82,10 +82,10 @@ export default class BlockChain {
     /**
      * The state of blockchain.
      * In default, this is `undefined` and will never be changed.
-     * You can specify the behavior to change this by overriding `this.updateState`.
+     * You can specify the behavior by overriding `this.updateState`.
      * @type {Object}
      */
-    this.state = {}
+    this.state = undefined
 
     // mining layer
 
@@ -181,9 +181,9 @@ export default class BlockChain {
     }
   }
 
-  // -----------------------------
-  //   Serialization And Hashing
-  // -----------------------------
+  // ---------------------------------------------
+  //   Data Structure, Serialization And Hashing
+  // ---------------------------------------------
 
   serializeHeader (header) {
   }
