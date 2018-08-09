@@ -12,8 +12,8 @@
   "license": "MIT",
   "dependencies": {
     "bignumber.js": "^7.2.1",
-    "flatbuffers": "^1.9.0",
     "jest": "^23.1.0",
+    "protobuf.js": "^1.1.2",
     "simple-peer": "^9.1.2",
     "standard": "^11.0.1",
     "webpack": "^4.12.0",
