@@ -1,9 +1,9 @@
 /* global Worker */
 
 import BigNumber from 'bignumber.js'
-import MerkleTree from 'MerkleTree'
-import protobuf from 'protobufjs'
-import Util from 'Util'
+import MerkleTree from './MerkleTree.js'
+// import protobuf from 'protobufjs'
+import Util from './Util.js'
 
 /**
  * Class reprensenting a BlockChain
@@ -72,7 +72,13 @@ export default class BlockChain {
      * The last block hash. Same as `this.blockHashes[this.blockHeight - 1]`.
      * @type {string}
      */
-    this.last_block_hash = undefined
+    this.lastBlockHash = '0000000000000000000000000000000000000000000000000000000000000000'
+
+    /**
+     * The last block timestamp. Same as `this.blockHeaders[this.blockHeight - 1].timestamp`.
+     * @type {string}
+     */
+    this.lastTimestamp = 0
 
     /**
      * The matrix of transactions. `this.transactions[i][j]` represents the j-th transaction of i-th block.
@@ -120,7 +126,8 @@ export default class BlockChain {
     this.blockHeaders.push(header)
     this.blockHashes.push(blockHash)
     this.hashToIndex[blockHash] = this.blockHeight
-    this.last_block_hash = blockHash
+    this.lastBlockHash = blockHash
+    this.lastTimestamp = header.timestamp
     this.transactions.push(transactions)
     this.blockHeight++
 
@@ -136,7 +143,7 @@ export default class BlockChain {
    */
   verifyAddBlock (header, transactions) {
     if (this.verifyBlock(header, transactions)) {
-      this._add_block(header, transactions)
+      this.addBlock(header, transactions)
       return true
     } else {
       return false
@@ -156,7 +163,7 @@ export default class BlockChain {
   verifyBlock (header, transactions) {
     let hashAsNumber = new BigNumber(this.hashHeader(header), 16)
     let blockTarget = new BigNumber(header.target, 16)
-    if (header.blockHeight === this.blockHeight) {
+    if (!(header.blockNumber === this.blockHeight)) {
       return false
     }
     if (!(this.target.gt(blockTarget) && blockTarget.gt(hashAsNumber))) {
@@ -165,12 +172,11 @@ export default class BlockChain {
     if (!(this.hashTransactions(transactions) === header.treeHash)) {
       return false
     }
-    if (!(header.prevHash === this.last_block_hash)) {
+    if (!(header.prevHash === this.lastBlockHash)) {
       return false
     }
-    let lastTimestamp = this.blockHeaders[this.blockHeight - 1].timestamp
     let maxTimestamp = new Date().getTime() + this.timestampTolerance
-    if (!(lastTimestamp < header.timestamp && header.timestamp < maxTimestamp)) {
+    if (!(this.lastTimestamp < header.timestamp && header.timestamp < maxTimestamp)) {
       return false
     }
     return true
@@ -228,7 +234,7 @@ export default class BlockChain {
     const coinbasetx = this.generateCoinbaseTx()
     const txs = [coinbasetx].concat(this.pendingTransactions)
     const pendingBlock = {
-      prevHash: this.last_block_hash,
+      prevHash: this.lastBlockHash,
       treeHash: this.hashTransactions(txs),
       nonce: undefined
     }

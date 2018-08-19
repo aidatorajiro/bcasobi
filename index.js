@@ -4,12 +4,16 @@ import Combinatory from './src/blockchain/Combinatory.js'
 import Reactive from './src/blockchain/Reactive.js'
 import Util from './src/blockchain/Util.js'
 import VM from './src/blockchain/VM.js'
+import Peer from './src/network/Peer.js'
+import BigNumber from 'bignumber.js'
 
-module.exports = {
+export {
   AccountBase,
   Blockchain,
   Combinatory,
   Reactive,
   Util,
-  VM
+  VM,
+  Peer,
+  BigNumber
 }

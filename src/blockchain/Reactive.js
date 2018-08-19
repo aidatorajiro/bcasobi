@@ -12,7 +12,7 @@ export default class Reactive extends BlockChain {
     this.events = {}
 
     this.reservedEvents = ['newblock']
-    for (let id in this.reservedEvents) {
+    for (let id of this.reservedEvents) {
       this.events[id] = {
         dynToUpdate: []
       }
@@ -32,11 +32,11 @@ export default class Reactive extends BlockChain {
         }
         continue
       }
-      if (tx.func === 'emitEvent' && tx.id in this.events && !(tx.id in this.reservedEvents)) {
+      if (tx.func === 'emitEvent' && tx.id in this.events) {
         this.emitEvent(tx.id, tx.data)
         continue
       }
-      if (tx.func === 'holdDyn') {
+      if (tx.func === 'holdDyn' && tx.eventId in this.events) {
         this.dyns[tx.dynId] = {
           event: tx.eventId,
           current: tx.init
