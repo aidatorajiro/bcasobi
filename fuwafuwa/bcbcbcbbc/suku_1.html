@@ -1,0 +1,89 @@
+<!doctype html5>
+<html>
+    <head>
+        <title>bcasobi</title>
+        <link href="https://fonts.googleapis.com/css?family=Assistant:300" rel="stylesheet">
+        <link rel="stylesheet" type="text/css" href="common.css">
+        <style>
+            * {
+                font-family: "Assistant", sans-serif;
+                font-weight: 300;
+                letter-spacing: 2px;
+                word-break: break-all;
+            }
+            #topics_wrapper {
+                font-size: 20px;
+            }
+            #sukuu {
+                display: block;
+                background: #322274;
+                width: 200px;
+                color: white;
+                font-family: "YuMincho", sans-serif;
+                border: none;
+                padding: 10px  30px  10px  30px;
+                margin: 60px auto;
+                outline: 0;
+                cursor: pointer;
+            }
+            #sukuikata {
+                padding: 30px;
+                word-break: break-all;
+            }
+            .yumin {
+                font-family: "YuMincho", sans-serif;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>Position : <span id="position"></span> / <span id="blocknum"></span></h1>
+
+        <h1>Density : <span id="density"></span></h1>
+
+        <h2>Address : <span id="address"></span></h2>
+
+        <h2>Block Hash : <span id="blockHash"></span></h2>
+
+        <h2>Data : <span id="data"></span></h2>
+
+        <h2>Log Index : <span id="logIndex"></span></h2>
+
+        <div id="topics_wrapper">Topics : <br><div id="topics"></div></div>
+
+        <button id="sukuu">救う</button>
+        <div id="sukuikata"></div>
+        
+        <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+        <script src="web3.js"></script>
+        <script src="loadweb3.js"></script>
+        <script>
+            $(function () {
+                (async () => {
+                    let blocknum, rand_pos, width, logs;
+                    while (true) {
+                        blocknum = await web3.eth.getBlockNumber();
+                        $('#blocknum').text(blocknum);
+                        rand_pos = Math.floor(Math.random() * (blocknum - 1000)) + 1000;
+                        $('#position').text(rand_pos);
+                        width = Math.floor(1000/(rand_pos *  0.0001));
+                        console.log(rand_pos);
+                        logs = await web3.eth.getPastLogs({fromBlock: rand_pos, toBlock: rand_pos + width});
+                        if (logs.length != 0) {
+                            break;
+                        }
+                    }
+                    let log = logs[0];
+                    $('#address').text(log.address);
+                    $('#blockHash').text(log.blockHash);
+                    $('#data').text(log.data);
+                    $('#logIndex').text(log.logIndex);
+                    $('#topics').html(log.topics.join("<br>"));
+
+                    $("#sukuu").click(function () {
+                        $("#sukuikata").html(JSON.stringify(log) + '<span class="yumin">を救った！<span>');
+                    });
+                })();
+            });
+        </script>
+    </body>
+</html>

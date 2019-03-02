@@ -1,0 +1,208 @@
+<!doctype html5>
+<html>
+    <head>
+        <title>bcasobi</title>
+        <link rel="stylesheet" type="text/css" href="common.css">
+    </head>
+    <body>
+        <h1>ぐるぐる</h1>
+
+        ぐるぐるぐ　ぐるぐるぐるぐ　ぐるぐるぐ　ぐるぐるががが　ぐるががが
+        
+        <h1>Position : <span id="position"></span> / <span id="blocknum"></span></h1>
+
+        <h2>Address : <span id="address"></span></h2>
+
+        <h2>Block Hash : <span id="blockHash"></span></h2>
+
+        <h2>Data : <span id="data"></span></h2>
+
+        <h2>Log Index : <span id="logIndex"></span></h2>
+
+        <h2>Topics : <span id="topics"></span></h2>
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/99/three.min.js"></script>
+        <script src="https://threejs.org/examples/js/postprocessing/EffectComposer.js"></script>
+        <script src="https://threejs.org/examples/js/shaders/CopyShader.js"></script>
+        <script src="https://threejs.org/examples/js/postprocessing/MaskPass.js"></script>
+        <script src="https://threejs.org/examples/js/postprocessing/RenderPass.js"></script>
+        <script src="https://threejs.org/examples/js/postprocessing/ShaderPass.js"></script>
+        <script src="https://threejs.org/examples/js/shaders/DotScreenShader.js"></script>
+        <script src="https://threejs.org/examples/js/shaders/RGBShiftShader.js"></script>
+        <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+        <script src="web3.js"></script>
+        <script>
+
+var GuruShader = {
+    uniforms: {
+        "delta": {type: "v2", value: new THREE.Vector2(99, 99)},
+        "scale": {type: "f", value: 10}
+    },
+    vertexShader: [
+
+"varying vec2 vUv;",
+
+"void main() {",
+
+  "vUv = uv;",
+  "gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );",
+
+"}"
+
+    ].join("\n"),
+    fragmentShader: [
+"#extension GL_OES_standard_derivatives : enable",
+"#ifdef GL_ES",
+"precision mediump float;",
+"#endif",
+"",
+"uniform float time;",
+"uniform vec2 delta;",
+"uniform float scale;",
+"uniform vec2 resolution;",
+"varying vec2 vUv;",
+"",
+"vec2 compmul(vec2 a, vec2 b) {",
+"	return vec2(a.x*b.x - a.y*b.y, a.x*b.y + a.y*b.x);",
+"}",
+"",
+"vec2 compdiv(vec2 a, vec2 b) {",
+"	return vec2(a.x*b.x + a.y*b.y, - a.x*b.y + a.y*b.x)/(dot(b, b));",
+"}",
+"",
+"vec2 poly(vec2 a1) {",
+"	vec2 a2 = compmul(a1, a1);",
+"	vec2 a3 = compmul(a2, a1);",
+"	vec2 a4 = compmul(a3, a1);",
+"	vec2 a5 = compmul(a4, a1);",
+"	return a5 + vec2(4, 0);",
+"}",
+"",
+"vec2 poly_derivative(vec2 a1) {",
+"	vec2 a2 = compmul(a1, a1);",
+"	vec2 a3 = compmul(a2, a1);",
+"	vec2 a4 = compmul(a3, a1);",
+"	vec2 a5 = compmul(a4, a1);",
+"	return 5.0*a4 + 12.0*a3 + 3.0*a2;",
+"}",
+"",
+"void main( void ) {",
+"	// constant definition",
+"	float pi = 3.1415926535897932384626433832795;",
+"	",
+"	// Newton's method",
+"	vec2 position = (vUv - vec2(0.5, 0.5))*scale;",
+"	vec2 val = position;",
+"	",
+"	for (int i = 0; i < 50; i++) {",
+"		val = val - compmul(delta, compdiv(poly(val),poly_derivative(val)));",
+"	}",
+"	",
+"	// calculate color",
+"	vec2 col = (vec2(atan(val.x), atan(val.y)) + (pi / 2.0)) / pi;",
+"	",
+"	if (col.x < 0.0 || col.y < 0.0) {",
+"		col = vec2(0,0);",
+"	}",
+"	",
+"	// output",
+"	gl_FragColor = vec4( col.x, col.y, col.x + col.y, 1.0 );",
+"}",
+
+    ].join("\n")
+
+};
+
+var scene, camera, renderer;
+var boxgeometry, boxmaterial, cube, light1, light2;
+var width, height;
+var composer, renderTarget;
+var guru;
+
+init();
+animate();
+
+function init() {
+
+  width  = 1000;
+  height = 1000;
+  
+  renderer = new THREE.WebGLRenderer();
+  renderer.setSize( width, height );
+  
+  renderTarget = new THREE.WebGLRenderTarget( width, height, {
+    minFilter: THREE.LinearFilter,
+    magFilter: THREE.LinearFilter, 
+    format: THREE.RGBFormat,
+    stencilBuffer: false
+  } );
+  
+  composer = new THREE.EffectComposer( renderer, renderTarget );
+  
+  scene = new THREE.Scene();
+  
+  camera = new THREE.PerspectiveCamera(45, width / height, 1, 10000);
+  camera.position.z = 40;
+  
+  composer.addPass( new THREE.RenderPass( scene, camera ) );
+  
+  guru = new THREE.ShaderPass( GuruShader );
+  composer.addPass( guru );
+
+  var out = new THREE.ShaderPass( THREE.CopyShader );
+  composer.addPass( out );
+  out.renderToScreen = true;
+  
+  light1 = new THREE.DirectionalLight( new THREE.Color(0xffffff), 2);
+  light2 = new THREE.DirectionalLight( new THREE.Color(0xffffff), 2);
+  light1.position.set(100, 100, 100);
+  light2.position.set(-100, -100, -100);
+  
+  scene.add(light1);
+  scene.add(light2);
+
+  boxgeometry = new THREE.BoxGeometry(12,12,12);
+  boxmaterial = new THREE.MeshNormalMaterial();
+  cube = new THREE.Mesh(boxgeometry, boxmaterial);
+
+  scene.add( cube );
+
+  document.body.appendChild( renderer.domElement );
+
+}
+
+function animate() {
+
+  requestAnimationFrame( animate );
+
+  composer.render();
+}
+
+let web3 = new Web3(new Web3.providers.HttpProvider("https://mainnet.infura.io/v3/70b9b9c773644a84964a338d2b2dac95"));
+
+$(async function () {
+    while (true) {
+        blocknum = await web3.eth.getBlockNumber();
+        $('#blocknum').text(blocknum);
+        rand_pos = Math.floor(Math.random() * (blocknum - 1000)) + 1000;
+        $('#position').text(rand_pos);
+        width = Math.floor(1000/(rand_pos *  0.0001));
+        console.log(rand_pos);
+        logs = await web3.eth.getPastLogs({fromBlock: rand_pos, toBlock: rand_pos + width});
+        if (logs.length != 0) {
+            break;
+        }
+    }
+    let log = logs[0];
+    $('#address').text(log.address);
+    $('#blockHash').text(log.blockHash);
+    $('#data').text(log.data);
+    $('#logIndex').text(log.logIndex);
+    $('#topics').text(log.topics);
+
+    let s = Math.sqrt(rand_pos*rand_pos + blocknum*blocknum);
+    guru.uniforms.delta.value = new THREE.Vector2(rand_pos / s, blocknum / s);
+});
+        </script>
+    </body>
+</html>

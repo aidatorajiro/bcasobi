@@ -1,0 +1,267 @@
+<!doctype html5>
+<html>
+    <head>
+        <title>bcasobi</title>
+        <link rel="stylesheet" type="text/css" href="common.css">
+    </head>
+    <body>
+        <h1>ぐるぐる</h1>
+
+        ぐるぐるぐ　ぐるぐるぐるぐ　ぐるぐるぐ　ぐるぐるががが　が？ぐるががが
+        
+        <h1><span id="position"></span> / <span id="blocknum"></span></h1>
+
+        <h2><span id="address"></span></h2>
+
+        <h2><span id="blockHash"></span></h2>
+
+        <h2><span id="data"></span></h2>
+
+        <h2><span id="logIndex"></span></h2>
+
+        <h2><span id="topics"></span></h2>
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/99/three.min.js"></script>
+        <script src="https://threejs.org/examples/js/postprocessing/EffectComposer.js"></script>
+        <script src="https://threejs.org/examples/js/shaders/CopyShader.js"></script>
+        <script src="https://threejs.org/examples/js/postprocessing/MaskPass.js"></script>
+        <script src="https://threejs.org/examples/js/postprocessing/RenderPass.js"></script>
+        <script src="https://threejs.org/examples/js/postprocessing/ShaderPass.js"></script>
+        <script src="https://threejs.org/examples/js/shaders/DotScreenShader.js"></script>
+        <script src="https://threejs.org/examples/js/shaders/RGBShiftShader.js"></script>
+        <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+        <script src="web3.js"></script>
+        <script src="loadweb3.js"></script>
+        <script src="loadweb3ws.js"></script>
+        <script>
+
+var GuruShader = {
+    uniforms: {
+        "delta": {type: "v2", value: new THREE.Vector2(99, 99)},
+        "scale": {type: "f", value: 10}
+    },
+    vertexShader: [
+
+"varying vec2 vUv;",
+
+"void main() {",
+
+  "vUv = uv;",
+  "gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );",
+
+"}"
+
+    ].join("\n"),
+    fragmentShader: [
+"#extension GL_OES_standard_derivatives : enable",
+"#ifdef GL_ES",
+"precision mediump float;",
+"#endif",
+"",
+"uniform float time;",
+"uniform vec2 delta;",
+"uniform float scale;",
+"uniform vec2 resolution;",
+"varying vec2 vUv;",
+"",
+"vec2 compmul(vec2 a, vec2 b) {",
+"	return vec2(a.x*b.x - a.y*b.y, a.x*b.y + a.y*b.x);",
+"}",
+"",
+"vec2 compdiv(vec2 a, vec2 b) {",
+"	return vec2(a.x*b.x + a.y*b.y, - a.x*b.y + a.y*b.x)/(dot(b, b));",
+"}",
+"",
+"vec2 poly(vec2 a1) {",
+"	vec2 a2 = compmul(a1, a1);",
+"	vec2 a3 = compmul(a2, a1);",
+"	vec2 a4 = compmul(a3, a1);",
+"	vec2 a5 = compmul(a4, a1);",
+"	return a5 + vec2(4, 0);",
+"}",
+"",
+"vec2 poly_derivative(vec2 a1) {",
+"	vec2 a2 = compmul(a1, a1);",
+"	vec2 a3 = compmul(a2, a1);",
+"	vec2 a4 = compmul(a3, a1);",
+"	vec2 a5 = compmul(a4, a1);",
+"	return 5.0*a4 + 12.0*a3 + 3.0*a2;",
+"}",
+"",
+"void main( void ) {",
+"	// constant definition",
+"	float pi = 3.1415926535897932384626433832795;",
+"	",
+"	// Newton's method",
+"	vec2 position = (vUv - vec2(0.5, 0.5))*scale;",
+"	vec2 val = position;",
+"	",
+"	for (int i = 0; i < 50; i++) {",
+"		val = val - compmul(delta, compdiv(poly(val),poly_derivative(val)));",
+"	}",
+"	",
+"	// calculate color",
+"	vec2 col = (vec2(atan(val.x), atan(val.y)) + (pi / 2.0)) / pi;",
+"	",
+"	if (col.x < 0.0 || col.y < 0.0) {",
+"		col = vec2(0,0);",
+"	}",
+"	",
+"	// output",
+"	gl_FragColor = vec4( col.x, col.y, col.x + col.y, 1.0 );",
+"}",
+
+    ].join("\n")
+
+};
+
+var scene, camera, renderer;
+var boxgeometry, boxmaterial, cube, light1, light2;
+var width, height;
+var composer, renderTarget;
+var guru;
+
+init();
+animate();
+
+function init() {
+
+  width  = 1000;
+  height = 1000;
+  
+  renderer = new THREE.WebGLRenderer();
+  renderer.setSize( width, height );
+  
+  renderTarget = new THREE.WebGLRenderTarget( width, height, {
+    minFilter: THREE.LinearFilter,
+    magFilter: THREE.LinearFilter, 
+    format: THREE.RGBFormat,
+    stencilBuffer: false
+  } );
+  
+  composer = new THREE.EffectComposer( renderer, renderTarget );
+  
+  scene = new THREE.Scene();
+  
+  camera = new THREE.PerspectiveCamera(45, width / height, 1, 10000);
+  camera.position.z = 40;
+  
+  composer.addPass( new THREE.RenderPass( scene, camera ) );
+  
+  guru = new THREE.ShaderPass( GuruShader );
+  composer.addPass( guru );
+
+  var out = new THREE.ShaderPass( THREE.CopyShader );
+  composer.addPass( out );
+  out.renderToScreen = true;
+  
+  light1 = new THREE.DirectionalLight( new THREE.Color(0xffffff), 2);
+  light2 = new THREE.DirectionalLight( new THREE.Color(0xffffff), 2);
+  light1.position.set(100, 100, 100);
+  light2.position.set(-100, -100, -100);
+  
+  scene.add(light1);
+  scene.add(light2);
+
+  boxgeometry = new THREE.BoxGeometry(12,12,12);
+  boxmaterial = new THREE.MeshNormalMaterial();
+  cube = new THREE.Mesh(boxgeometry, boxmaterial);
+
+  scene.add( cube );
+
+  document.body.appendChild( renderer.domElement );
+
+}
+
+function animate() {
+  requestAnimationFrame( animate );
+
+  composer.render();
+}
+
+function sleep(t) {
+    return new Promise(function (res, rej) {
+        setTimeout(function () {
+            res();
+        }, t)
+    });
+}
+
+$(async function () {
+    let blocknum, width, logs;
+
+    while (true) {
+        blocknum = await web3.eth.getBlockNumber();
+        let rand_pos = Math.floor(Math.random() * (blocknum - 1000)) + 1000;
+        width = Math.floor(1000/(rand_pos *  0.0001));
+        console.log(rand_pos);
+        logs = await web3.eth.getPastLogs({fromBlock: rand_pos, toBlock: rand_pos + width});
+        if (logs.length != 0) {
+            break;
+        }
+    }
+
+    function setdata (log, num) {
+        let pos = log.blockNumber;
+        $('#blocknum').text(blocknum);
+        $('#position').text(pos);
+        $('#address').text(log.address);
+        $('#blockHash').text(log.blockHash);
+        $('#data').text(log.data);
+        $('#logIndex').text(log.logIndex);
+        $('#topics').text(log.topics);
+        let s = Math.sqrt(pos*pos + num*num);
+        guru.uniforms.delta.value = new THREE.Vector2(pos / s, num / s);
+    }
+
+    setdata(logs[0], blocknum);
+
+    let startAddress = logs[0].address;
+    let startPos = logs[0].blockNumber;
+
+    let context = new (window.AudioContext || window.webkitAudioContext)();
+    let ongenmp3 = await fetch('ongen.mp3');
+    let ongen = await context.decodeAudioData(await ongenmp3.arrayBuffer());
+    let sourceNode = context.createBufferSource();
+    let biquadFilter = context.createBiquadFilter();
+    sourceNode.buffer = ongen;
+    sourceNode.loop = true;
+    sourceNode.connect(biquadFilter);
+    sourceNode.start();
+
+    biquadFilter.connect(context.destination);
+    biquadFilter.type = "highshelf";
+    biquadFilter.gain.value = 0;
+
+    function play (freq, length) {
+        if (length === undefined) {
+            length = 100
+        }
+        biquadFilter.frequency.value = freq;
+        biquadFilter.gain.value = 25;
+    }
+
+    let branchLogs = []
+
+    let subs = web3ws.eth.subscribe("logs", {address: startAddress, fromBlock: startPos, toBlock: startPos+10000}, (err, ret) => {
+        if (err == null) {
+            branchLogs.push(ret)
+        }
+    });
+
+    let branchLogsIndex = 0;
+
+    setInterval(function () {
+        if (branchLogs.length == 0) { return; }
+        setdata(branchLogs[branchLogsIndex], blocknum)
+        console.log(branchLogs[branchLogsIndex].blockNumber)
+        play(300*branchLogs[branchLogsIndex].blockNumber/blocknum)
+        branchLogsIndex++;
+        if (branchLogsIndex == branchLogs.length) {
+            branchLogsIndex = 0
+        }
+    }, 1);
+});
+        </script>
+    </body>
+</html>

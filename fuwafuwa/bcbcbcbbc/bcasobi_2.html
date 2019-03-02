@@ -1,0 +1,126 @@
+<!doctype html5>
+<html>
+    <head>
+        <title>bcasobi</title>
+        <link rel="stylesheet" type="text/css" href="common.css">
+        <style>
+            #lyric {
+                font-family: 'Yu Mincho', serif;
+                text-align: center;
+                margin: 50px;
+                display: none;
+            }
+        </style>
+    </head>
+    <body>
+            <h1>Position : <span id="position"></span> / <span id="blocknum"></span></h1>
+
+            <h2>Address : <span id="address"></span></h2>
+    
+            <h2>Block Hash : <span id="blockHash"></span></h2>
+    
+            <h2>Data : <span id="data"></span></h2>
+    
+            <h2>Log Index : <span id="logIndex"></span></h2>
+    
+            <h2>Topics : <span id="topics"></span></h2>
+
+            <div id="desc">
+
+            </div>
+    
+        <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+        <script src="https://d3js.org/d3.v5.min.js"></script>
+        <script src="web3.js"></script>
+        <script>
+
+            if (window.web3 !== undefined) {
+                web3 = new Web3(window.web3.currentProvider);
+            } else {
+                web3 = new Web3(new Web3.providers.WebsocketProvider('wss://mainnet.infura.io/ws'));
+            }
+
+            $(async function () {
+                let currentPos = 0;
+                let context = new (window.AudioContext || window.webkitAudioContext)();
+                let ongenmp3 = await fetch('ongen.mp3');
+                let ongen = await context.decodeAudioData(await ongenmp3.arrayBuffer());
+                let sourceNode = context.createBufferSource();
+                let biquadFilter = context.createBiquadFilter();
+                sourceNode.buffer = ongen;
+                sourceNode.loop = true;
+                sourceNode.connect(biquadFilter);
+                sourceNode.start();
+
+                biquadFilter.connect(context.destination);
+                biquadFilter.type = "lowshelf";
+                biquadFilter.gain.value = 0;
+
+                function play (freq, length) {
+                    if (length === undefined) {
+                        length = 100
+                    }
+                    biquadFilter.frequency.value += freq;
+                    biquadFilter.gain.value += 25;
+                    setTimeout(function () {
+                        biquadFilter.frequency.value = 0;
+                        biquadFilter.gain.value = 0;
+                    }, length);
+                }
+
+                let state = {};
+                let chain = [];
+                let transmissions = [];
+                let log = [];
+
+                function addAmount (account, amount) {
+                    if (!(account in state)) {
+                        state[account] = {
+                            type: 'account',
+                            amount
+                        }
+                    } else {
+                        state[account]['amount'] += amount;
+                    }
+                }
+
+                function getAmount (account) {
+                    return state[account]['amount'];
+                }
+
+                /* display data */
+
+                while (true) {
+                    blocknum = await web3.eth.getBlockNumber();
+                    $('#blocknum').text(blocknum);
+                    rand_pos = Math.floor(Math.random() * (blocknum - 1000)) + 1000;
+                    $('#position').text(rand_pos);
+                    width = Math.floor(1000/(rand_pos *  0.0001));
+                    console.log(rand_pos);
+                    logs = await web3.eth.getPastLogs({fromBlock: rand_pos, toBlock: rand_pos + width});
+                    if (logs.length != 0) {
+                        break;
+                    }
+                }
+
+                $('#address').text(logs[0].address);
+                $('#blockHash').text(logs[0].blockHash);
+                $('#data').text(logs[0].data);
+                $('#logIndex').text(logs[0].logIndex);
+                $('#topics').text(logs[0].topics);
+
+                /* sonification */
+
+                let extractedAddress = logs[0].address;
+
+                let ajaxUrl = ("http://api.etherscan.io/api?module=account&action=txlist&address=" + extractedAddress + "&startblock=0&endblock=latest");
+
+                $.ajax(function () {
+                    
+                });
+
+                console.log(extractedAddress)
+            });
+        </script>
+    </body>
+</html>

@@ -1,0 +1,99 @@
+<!doctype html5>
+<html>
+    <head>
+        <title>bcasobi</title>
+        <link rel="stylesheet" type="text/css" href="common.css">
+        <style>
+            #lyric {
+                font-family: 'Yu Mincho', serif;
+                text-align: center;
+                margin: 50px;
+            }
+        </style>
+    </head>
+    <body>
+        <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+        <script src="https://d3js.org/d3.v5.min.js"></script>
+        <script src="web3.js"></script>
+        <script>
+            (async function () {
+                let currentPos = 0;
+                let context = new (window.AudioContext || window.webkitAudioContext)();
+                let ongenmp3 = await fetch('ongen.mp3');
+                let ongen = await context.decodeAudioData(await ongenmp3.arrayBuffer());
+                let sourceNode = context.createBufferSource();
+                let biquadFilter = context.createBiquadFilter();
+                sourceNode.buffer = ongen;
+                sourceNode.loop = true;
+                sourceNode.connect(biquadFilter);
+                sourceNode.start();
+
+                biquadFilter.connect(context.destination);
+                biquadFilter.type = "lowshelf";
+                biquadFilter.gain.value = 0;
+
+                function play (freq, length) {
+                    if (length === undefined) {
+                        length = 100
+                    }
+                    biquadFilter.frequency.value += freq;
+                    biquadFilter.gain.value += 25;
+                    setTimeout(function () {
+                        biquadFilter.frequency.value = 0;
+                        biquadFilter.gain.value = 0;
+                    }, length);
+                }
+
+                let state = {};
+                let chain = [];
+                let transmissions = [];
+                let log = [];
+
+                function addAmount (account, amount) {
+                    if (!(account in state)) {
+                        state[account] = {
+                            type: 'account',
+                            amount
+                        }
+                    } else {
+                        state[account]['amount'] += amount;
+                    }
+                }
+
+                function getAmount (account) {
+                    return state[account]['amount'];
+                }
+
+                function addMiningReward (account, amount) {
+                    log.push({
+                        type: 'miningReward',
+                        to: account,
+                        amount: amount
+                    });
+                    addAmount(account, amount);
+                    play(666 + Math.log(getAmount(account))*30);
+                }
+
+                let web3;
+                if (window.web3 !== undefined) {
+                    web3 = new Web3(window.web3.currentProvider);
+                } else {
+                    web3 = new Web3(new Web3.providers.WebsocketProvider('wss://mainnet.infura.io/ws'));
+                }
+
+                let blockNumberFrom = 100000;
+                let blockNumberTo = 200100;
+
+                for (let i = blockNumberFrom; i < blockNumberTo + 1; i++) {
+                    let block = await web3.eth.getBlock(i);
+                    addMiningReward(block.miner.toLowerCase(), 5);
+                    if (block.transactions.length !== 0) {
+                        play(444);
+                    }
+                    for (let tx of block.transactions) {
+                    }
+                }
+            })();
+        </script>
+    </body>
+</html>

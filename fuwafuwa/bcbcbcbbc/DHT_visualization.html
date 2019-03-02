@@ -1,0 +1,57 @@
+<!doctype html5>
+<html>
+    <head>
+        <title>bcasobi</title>
+        <link rel="stylesheet" type="text/css" href="common.css">
+    </head>
+    <body>
+        <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+        <script src="web3.js"></script>
+        <script src="https://d3js.org/d3.v5.min.js"></script>
+        <script src="figlib.js"></script>
+        <script src="loadweb3.js"></script>
+        <script>
+            var web3 = new Web3("")
+        </script>
+
+        <h1>Ethereum = DHT</h1>
+
+        <p>
+
+        Ethereum は更新履歴も共有できる DHT である。<br>
+        DHTとは ... Distributed Hash Table<br>
+        名前と値のペア、例えば<br>
+
+        <div id="ex-1" class="table"></div>
+
+        <div id="ex-1-update" class="update">更新(ランダムなデータに置きかわります)</div>
+
+        <script>
+            update("#ex-1-update", () => {
+                d3.selectAll("#ex-1").selectAll("*").remove()
+                let data = ["山田", "谷川", "原", "田宮"].map((x) => (
+                    {"名前": x, "年齢": (Math.random() * 1000000) + "歳"}
+                ));
+                return tabulate("#ex-1", data, ["名前", "年齢"]);
+            });
+        </script>
+
+        などを分散して共有する技術だ。
+
+        </p>
+
+        <p>
+
+        Ethereumでは、例えばブロック<span id="ex-2-block" class="variable"></span>におけるブロック数は<span id="ex-2-number" class="variable"></span><br>
+
+        <div id="ex-2-update" class="update">更新</div>
+
+        </p>
+
+        <script>
+            update("#ex-2-update", async () => {
+                
+            });
+        </script>
+    </body>
+</html>

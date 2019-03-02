@@ -1,0 +1,36 @@
+<!doctype html5>
+<html>
+    <head>
+        <title>bcasobi</title>
+        <link rel="stylesheet" type="text/css" href="common.css">
+    </head>
+    <body>
+        <h1>!!!7777777777777777!!!</h1>
+        <div id="main">
+            You have: <span id="money_have"></span><br>
+            <button id="gogo">GO!</button>
+        </div>
+        <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+        <script src="https://d3js.org/d3.v5.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/99/three.min.js"></script>
+        <script src="web3.js"></script>
+        <script>
+            $(async function () {
+                let money = 100;
+                let btn = $('#gogo');
+                btn.click(function () {
+                    if ($(this).text() == 'GO!') {
+                        $(this).text('STOP');
+                    } else if ($(this).text() == 'STOP') {
+                        $(this).text('GO!');
+                    }
+                    update();
+                });
+                function update () {
+                    $("#money_have").text(money);
+                }
+                update()
+            });
+        </script>
+    </body>
+</html>

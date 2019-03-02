@@ -1,0 +1,85 @@
+<!doctype html5>
+<html>
+    <head>
+        <title>bcasobi</title>
+        <link rel="stylesheet" type="text/css" href="common.css">
+        <style>
+            #lyric {
+                font-family: 'Yu Mincho', serif;
+                text-align: center;
+                margin: 50px;
+                display: none;
+            }
+        </style>
+    </head>
+    <body>
+        <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+        <script src="https://d3js.org/d3.v5.min.js"></script>
+        <script src="web3.js"></script>
+        <script>
+            function updateDensity(x, y) {
+                return (x*6 + y) / 7;
+            }
+
+            (async function () {
+                if (window.web3 !== undefined) {
+                    window.web3 = new Web3(window.web3.currentProvider);
+                } else {
+                    window.web3 = new Web3(new Web3.providers.WebsocketProvider('wss://mainnet.infura.io/ws'));
+                }
+
+                let log = [];
+
+                let blockNumberFrom = 100000;
+                let blockNumberTo = 1000000;
+
+                let velocity = 1;
+                let txdensity = 0;
+                let coordinate = 0;
+
+                while (true) {
+                    let i = Math.floor(coordinate);
+                    let block = await web3.eth.getBlock(i);
+                    log.push({
+                        type: 'mining_reward',
+                        val: 5
+                    })
+                    if (block.transactions.length !== 0) {
+                        log.push({
+                            type: 'tx_aruyo'
+                        })
+                    }
+                    for (let tx of block.transactions) {
+                        let txdata = await web3.eth.getTransaction(tx);
+                        console.log(txdata);
+                        if (txdata.input === '0x') {
+                            log.push({
+                                type: 'tx_send',
+                                from: txdata.from,
+                                to: txdata.to,
+                                value: txdata.value
+                            })
+                        } else {
+                            log.push({
+                                type: 'tx_input',
+                                from: txdata.from,
+                                to: txdata.to,
+                                value: txdata.value
+                            })
+                        }
+                    }
+
+                    txdensity = updateDensity(txdensity, block.transactions.length)
+                    velocity += -10*Math.log(txdensity + 0.5)
+                    coordinate += velocity;
+
+                    console.log(block.transactions.length, txdensity, velocity, coordinate);
+
+                    i++;
+                }
+
+
+            })();
+        </script>
+    </body>
+</html>

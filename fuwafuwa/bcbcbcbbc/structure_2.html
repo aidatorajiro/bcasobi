@@ -1,0 +1,63 @@
+<!doctype html5>
+<html>
+    <head>
+        <title>bcasobi</title>
+        <link rel="stylesheet" type="text/css" href="common.css">
+    </head>
+    <body>
+        <link rel="stylesheet" type="text/css" href="common.css">
+
+        <h1>ランダムストラクチャー記述フィールド</h1>
+
+        アブストラクト ランダムストラクチャー記述フィールド を用いて、カーディナリティーを意識したコンピュテーション感覚を体得しましょう。
+
+        <img class="img_center" src="IMG_4083.jpg" width="500"></img>
+        <script src="sha256.min.js"></script>
+        <script>
+// Structure example revision 2.
+
+txStructure = {
+    name: "Transaction",
+    variables: [
+        {
+            name: "txin1",
+            generate: async (global, _) => {
+                let i = await global.choice(global.txs)
+                return i.txid
+            }
+        },
+        {
+            name: "txin2",
+            generate: async (global, _) => {
+                let i = await global.choice(global.txs)
+                return i.txid
+            }
+        },
+        {
+            name: "txout1",
+            generate: async (global, _) => {
+                let addr = await global.generateAddress()
+                let amount = await global.generateAmount()
+                return [addr, amount]
+            }
+        },
+        {
+            name: "txout2",
+            generate: async (global, _) => {
+                let addr = await global.generateAddress()
+                let amount = await global.generateAmount()
+                return [addr, amount]
+            }
+        },
+        {
+            name: "txid",
+            generate: async (global, generated) => {
+                return sha256(JSON.stringify(generated))
+            }
+        }
+    ]
+}
+
+        </script>
+    </body>
+</html>

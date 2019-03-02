@@ -1,0 +1,59 @@
+<!doctype html5>
+<html>
+    <head>
+        <title>bcasobi</title>
+        <link rel="stylesheet" type="text/css" href="common.css">
+    </head>
+    <body>
+        <div id="main">
+        </div>
+        <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+        <script src="https://d3js.org/d3.v5.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/99/three.min.js"></script>
+        <script src="web3.js"></script>
+        <script>
+            function visualize (program) {
+                if (!Array.isArray(program)) {
+                    throw new Error("INVALID ARGUMENT TYPE");
+                }
+
+                let process_func = (x, i) => {
+                    if (Array.isArray(x)) {
+                        return {"type": "composite", "children": x.map(process_func)}
+                    } else if (i === 0) {
+                        return {"type": "function", "data": x}
+                    } else {
+                        return {"type": "element", "data": x}
+                    }
+                }
+
+                let initialData = process_func(program)
+
+                console.log("=== PRINTING PROCESSED DATA ===")
+                console.log(initialData)
+
+                let draw = (data) => {
+                    d3.select('#main')
+                    .selectAll('div')
+                    .remove();
+                    
+                    if (data.type == 'composite') {
+                        d3.select('#main')
+                        .selectAll('div')
+                        .data(data.children)
+                        .enter()
+                        .append('div')
+                        .text(JSON.stringify)
+                        .style('position', 'absolute')
+                        .style('width', '200px')
+                        .style('height', '200px')
+                        .style('background', '#2757BC')
+                    }
+                }
+
+                draw(initialData)
+            }
+            visualize([["*", 4], [["+", 1], 2]])
+        </script>
+    </body>
+</html>

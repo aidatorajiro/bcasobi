@@ -1,0 +1,17 @@
+body {
+    font-family: "Yu Mincho", serif;
+    color: #232323;
+    text-align: center;
+}
+
+.code {
+    white-space: pre-wrap;
+    margin-left: 15px;
+}
+
+.img_center {
+    margin: auto;
+    display: block;
+    margin-top: 20px;
+    margin-bottom: 20px;
+}

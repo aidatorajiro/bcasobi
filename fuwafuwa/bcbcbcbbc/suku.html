@@ -1,0 +1,41 @@
+<!doctype html5>
+<html>
+    <head>
+        <title>bcasobi</title>
+        <link rel="stylesheet" type="text/css" href="common.css">
+    </head>
+    <body>
+        <h1>Position : <span id="position"></span> / <span id="blocknum"></span></h1>
+
+        <h2>Address : <span id="address"></span></h2>
+
+        <h2>Block Hash : <span id="blockHash"></span></h2>
+
+        <h2>Data : <span id="data"></span></h2>
+
+        <h2>Log Index : <span id="logIndex"></span></h2>
+
+        <h2>Topics : <span id="topics"></span></h2>
+        
+        <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+        <script src="web3.js"></script>
+        <script>
+            let web3 = new Web3(new Web3.providers.HttpProvider("https://mainnet.infura.io/v3/70b9b9c773644a84964a338d2b2dac95"));
+
+            $(async function () {
+                let blocknum = await web3.eth.getBlockNumber();
+                $('#blocknum').text(blocknum);
+                let rand_pos = Math.floor(Math.random() * blocknum) + 1;
+                $('#position').text(rand_pos);
+                console.log(rand_pos);
+                let logs = await web3.eth.getPastLogs({fromBlock: rand_pos, toBlock: rand_pos + 100});
+                let log = logs[0];
+                $('#address').text(log.address);
+                $('#blockHash').text(log.blockHash);
+                $('#data').text(log.data);
+                $('#logIndex').text(log.logIndex);
+                $('#topics').text(log.topics);
+            });
+        </script>
+    </body>
+</html>

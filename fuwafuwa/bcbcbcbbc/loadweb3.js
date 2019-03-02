@@ -1,0 +1,1 @@
+var web3 = new Web3(new Web3.providers.HttpProvider("https://mainnet.infura.io/v3/70b9b9c773644a84964a338d2b2dac95"));

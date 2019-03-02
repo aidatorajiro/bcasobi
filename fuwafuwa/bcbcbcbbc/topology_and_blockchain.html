@@ -1,0 +1,50 @@
+<!doctype html5>
+<html>
+    <head>
+        <title>bcasobi</title>
+        <link rel="stylesheet" type="text/css" href="common.css">
+    </head>
+    <body>
+        <h1>トポロジーとブロックチェーン</h1>
+        トポロジーとは？<br>
+        Coqにおけるトポロジー空間の定義:
+        <div class="code">
+Record TopologicalSpace : Type := {
+    point_set : Type;
+    open : Ensemble point_set -> Prop;
+    open_family_union : forall F : Family point_set,
+        (forall S : Ensemble point_set, In F S -> open S) ->
+        open (FamilyUnion F);
+    open_intersection2: forall U V:Ensemble point_set,
+        open U -> open V -> open (Intersection U V);
+    open_full : open Full_set
+}.
+        </div>
+        日本語訳:
+        <div class="code">
+トポロジー空間は点で構成されている。
+点の集合に対し、それが開である(open)という評価基準を考えることができる。ただし、
+- 全ての「開である集合」の集合に対し、その要素を足し合わせてできた点の集合(union)も開である。
+- 二つの開である集合の交わり(intersection)もまた開である。
+- 全ての点が入った集合は開である。
+        </div>
+        これらの定義に則る限り、「点」とは何であるかとか、openであるとはどのようなことかとかはなんでも良い。<br>
+        したがって、ブロックチェーンの構造をこの定義に落とし込むことができる。
+        <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+        <script src="https://d3js.org/d3.v5.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/99/three.min.js"></script>
+        <script src="web3.js"></script>
+        <script>
+            $(function () {
+                let money = 100;
+                jQuery.ajax();
+                let btn = $('<button>GO!</button>');
+                btn.click(function () {
+                    $(this).text('STOP');
+                    
+                });
+                $('#main').append(btn);
+            });
+        </script>
+    </body>
+</html>

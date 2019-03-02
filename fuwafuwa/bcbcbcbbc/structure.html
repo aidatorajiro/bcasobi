@@ -1,0 +1,214 @@
+<!doctype html5>
+<html>
+    <head>
+        <title>bcasobi</title>
+        <link rel="stylesheet" type="text/css" href="common.css">
+        <style>
+            .button {
+                cursor: pointer;
+                text-decoration: underline;
+                border: 1px #10003b solid;
+                width: 300px;
+                margin: 10px auto;
+            }
+            .mugen {
+                background-color: #10003b;
+                color: white;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>ランダムストラクチャー記述フィールド</h1>
+
+        アブストラクト ランダムストラクチャー記述フィールド を用いて、カーディナリティーを意識したコンピュテーション感覚を体得しましょう。
+
+        <img class="img_center" src="IMG_4083.jpg" width="500"></img>
+
+        <div id="main">
+        </div>
+
+        <script src="https://d3js.org/d3.v5.min.js"></script>
+        <script src="sha256.min.js"></script>
+        <script>
+// Structure example revision 1.
+
+transactionStructure = {
+    name: "Transaction",
+    variables: [
+        {
+            name: "txin1",
+            generate: async (global) => {
+                let txindex = await global.choice(global.tx_unspent)
+                let txid
+                if (txindex == -1) {
+                    txid = "無限"
+                } else {
+                    txid = global.tx_unspent[txindex].txid
+                    global.tx_unspent.splice(txindex, 1)
+                }
+                return txid
+            }
+        },
+        {
+            name: "txin2",
+            generate: async (global) => {
+                let txindex = await global.choice(global.tx_unspent)
+                let txid
+                if (txindex == -1) {
+                    txid = "無限"
+                } else {
+                    txid = global.tx_unspent[txindex].txid
+                    global.tx_unspent.splice(txindex, 1)
+                }
+                return txid
+            }
+        },
+        {
+            name: "txout1",
+            generate: async (global) => {
+                let addr = await global.generateAddress()
+                let amount = await global.generateAmount()
+                return [addr, amount]
+            }
+        },
+        {
+            name: "txout2",
+            generate: async (global) => {
+                let addr = await global.generateAddress()
+                let amount = await global.generateAmount()
+                return [addr, amount]
+            }
+        }
+    ],
+    computed: [
+        {
+            name: "txid",
+            generate: async (global) => {
+                return sha256(JSON.stringify(global.data))
+            }
+        }
+    ]
+}
+
+blockchainStructure = {
+    name: "Blockchain",
+    variables: [
+        {
+            name: 'txs',
+            generate: async (global) => {
+                while (true) {
+                    let tx = await genStructure(transactionStructure, global)
+                    console.log(tx)
+                    global.tx_unspent.push(tx.data)
+                }
+                return [global.tx_spent, global.tx_unspent]
+            }
+        }
+    ]
+}
+
+async function genStructure(structure, global) {
+    global.data = {}
+    for (let variable of structure.variables) {
+        let gen = await variable.generate(global)
+        global.data[variable.name] = gen
+    }
+    for (let computed of structure.computed) {
+        let gen = await computed.generate(global)
+        global.data[computed.name] = gen
+    }
+    return global
+}
+
+genStructure(blockchainStructure, {
+    choice: (arr) => {
+        return new Promise((acc, rej) => {
+            d3.selectAll("#main")
+              .selectAll("*")
+              .remove()
+            
+            d3.selectAll("#main")
+              .append("p")
+              .text("↓TXを選んで次に続けよう！↓")
+            
+            d3.selectAll("#main")
+              .append("div")
+              .text("無限")
+              .attr("class", "button mugen")
+              .on("click", () => {
+                d3.selectAll("#main")
+                  .selectAll("*")
+                  .remove()
+                setTimeout(() => {acc(-1)}, 1000)
+              })
+            
+            d3.selectAll("#main")
+              .selectAll("div.finite")
+              .data(arr)
+              .enter().append("div")
+              .attr("class", "button finite")
+              .text((d) => (d.txid))
+              .on("click", (_, i) => {
+                d3.selectAll("#main")
+                  .selectAll("*")
+                  .remove()
+                setTimeout(() => {acc(i)}, 1000)
+              })
+        })
+    },
+    generateAddress: () => {
+        return new Promise((acc, rej) => {
+            d3.selectAll("#main")
+              .selectAll("*")
+              .remove()
+            
+            d3.selectAll("#main")
+              .append("p")
+              .text("↓　あ　て　さ　き　↓")
+            
+            d3.selectAll("#main")
+              .append("input")
+              .attr("type", "text")
+              .attr("id", "inputdata")
+              .attr("value", "ほげほげのもお")
+            
+            d3.selectAll("#main")
+              .append("div")
+              .attr("class", "button")
+              .text("OK")
+              .on("click", (iranai, iranaiyo, elem) => {
+                  acc(inputdata.value)
+              })
+        })
+    },
+    generateAmount: () => {
+        return new Promise((acc, rej) => {
+            d3.selectAll("#main")
+              .selectAll("*")
+              .remove()
+            
+            d3.selectAll("#main")
+              .append("p")
+              .text("↓　り　ょ　う　↓")
+            
+            d3.selectAll("#main")
+              .append("input")
+              .attr("type", "text")
+              .attr("id", "inputdata")
+              .attr("value", "ほげほげのもい")
+            
+            d3.selectAll("#main")
+              .append("div")
+              .attr("class", "button")
+              .text("OK")
+              .on("click", () => {
+                  acc(inputdata.value)
+              })
+        })
+    },
+    tx_spent: [],
+    tx_unspent: []
+})
+        </script>
+    </body>
+</html>

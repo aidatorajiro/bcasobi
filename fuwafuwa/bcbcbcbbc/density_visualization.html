@@ -1,0 +1,117 @@
+<!doctype html5>
+<html>
+    <head>
+        <title>bcasobi</title>
+        <link rel="stylesheet" type="text/css" href="common.css">
+    </head>
+    <body>
+        <h1>Position : <span id="position"></span> / <span id="blocknum"></span></h1>
+
+        <h2>Address : <span id="address"></span></h2>
+
+        <h2>Block Hash : <span id="blockHash"></span></h2>
+
+        <h2>Data : <span id="data"></span></h2>
+
+        <h2>Log Index : <span id="logIndex"></span></h2>
+
+        <h2>Topics : <span id="topics"></span></h2>
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/99/three.min.js"></script>
+        <script src="https://threejs.org/examples/js/postprocessing/EffectComposer.js"></script>
+        <script src="https://threejs.org/examples/js/shaders/CopyShader.js"></script>
+        <script src="https://threejs.org/examples/js/postprocessing/MaskPass.js"></script>
+        <script src="https://threejs.org/examples/js/postprocessing/RenderPass.js"></script>
+        <script src="https://threejs.org/examples/js/postprocessing/ShaderPass.js"></script>
+        <script src="https://threejs.org/examples/js/shaders/DotScreenShader.js"></script>
+        <script src="https://threejs.org/examples/js/shaders/RGBShiftShader.js"></script>
+        <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+        <script src="web3.js"></script>
+        <script>
+
+function init() {
+
+  width  = 1000;
+  height = 1000;
+  
+  renderer = new THREE.WebGLRenderer();
+  renderer.setSize( width, height );
+  
+  renderTarget = new THREE.WebGLRenderTarget( width, height, {
+    minFilter: THREE.LinearFilter,
+    magFilter: THREE.LinearFilter, 
+    format: THREE.RGBFormat,
+    stencilBuffer: false
+  } );
+  
+  composer = new THREE.EffectComposer( renderer, renderTarget );
+  
+  scene = new THREE.Scene();
+  
+  camera = new THREE.PerspectiveCamera(45, width / height, 1, 10000);
+  camera.position.z = 40;
+  
+  composer.addPass( new THREE.RenderPass( scene, camera ) );
+  
+  var ts = new THREE.ShaderPass( GuruShader );
+  composer.addPass( ts );
+
+  var out = new THREE.ShaderPass( THREE.CopyShader );
+  composer.addPass( out );
+  out.renderToScreen = true;
+
+  composer.addPass( ts );
+  
+  light1 = new THREE.DirectionalLight( new THREE.Color(0xffffff), 2);
+  light2 = new THREE.DirectionalLight( new THREE.Color(0xffffff), 2);
+  light1.position.set(100, 100, 100);
+  light2.position.set(-100, -100, -100);
+  
+  scene.add(light1);
+  scene.add(light2);
+
+  boxgeometry = new THREE.BoxGeometry(12,12,12);
+  boxmaterial = new THREE.MeshNormalMaterial();
+  cube = new THREE.Mesh(boxgeometry, boxmaterial);
+
+  scene.add( cube );
+
+  document.body.appendChild( renderer.domElement );
+
+}
+
+function animate() {
+
+  requestAnimationFrame( animate );
+  
+  cube.rotation.x += 0.005;
+  cube.rotation.y += 0.01;
+
+  composer.render();
+}
+
+let web3 = new Web3(new Web3.providers.HttpProvider("https://mainnet.infura.io/v3/70b9b9c773644a84964a338d2b2dac95"));
+
+$(async function () {
+    while (true) {
+        blocknum = await web3.eth.getBlockNumber();
+        $('#blocknum').text(blocknum);
+        rand_pos = Math.floor(Math.random() * (blocknum - 1000)) + 1000;
+        $('#position').text(rand_pos);
+        width = Math.floor(1000/(rand_pos *  0.0001));
+        console.log(rand_pos);
+        logs = await web3.eth.getPastLogs({fromBlock: rand_pos, toBlock: rand_pos + width});
+        if (logs.length != 0) {
+            break;
+        }
+    }
+    let log = logs[0];
+    $('#address').text(log.address);
+    $('#blockHash').text(log.blockHash);
+    $('#data').text(log.data);
+    $('#logIndex').text(log.logIndex);
+    $('#topics').text(log.topics);
+});
+        </script>
+    </body>
+</html>
