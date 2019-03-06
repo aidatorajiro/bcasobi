@@ -20,8 +20,17 @@
             consensus が on beat<br>
             ここは block party block chain<br>
         </div>
+        <h1>TAP TO START</h1>
         <script>
+            let input = function () {
+                return new Promise(function (acc, rej) {
+                    window.addEventListener("click", function () {
+                        acc()
+                    })
+                })
+            }
             (async function () {
+                await input();
                 let currentPos = 0;
                 let context = new (window.AudioContext || window.webkitAudioContext)();
                 let ongenmp3 = await fetch('ongen.mp3');
