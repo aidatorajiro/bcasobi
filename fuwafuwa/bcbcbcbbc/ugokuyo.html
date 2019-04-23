@@ -1,0 +1,226 @@
+<script src="https://d3js.org/d3.v5.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/js-sha256/0.9.0/sha256.min.js"></script>
+<svg width="800" height="3000"></svg>
+
+<style>
+.link {
+    fill: none;
+    stroke: #555;
+    stroke-opacity: 0.4;
+    stroke-width: 1.5px;
+}
+</style>
+
+<script>
+let blockchain = {
+    id: "genesis",
+    data: "haihai!!!!",
+    pos: [],
+    children: []
+}
+let id_to_pos = {}
+
+// Primitive function to get a tip at `position` from `tree`.
+function get_tip(tree, position) {
+    let current = tree
+    for (let i of position) {
+        try {
+            current = current.children[i]
+        } catch (e) {
+            return undefined
+        }
+    }
+    return current
+}
+
+// Primitive function to add a `tip` to a `tree` at `position`. DESTRUCTIVE.
+function add_tip(tree, position, tip) {
+    let obj = get_tip(tree, position)
+    if (obj === undefined) {
+        throw "add_tip: invalid position"
+    } else {
+        obj.children.push(tip)
+        return position.concat(obj.children.length - 1)
+    }
+}
+
+// Function to add a block data to blockchain.
+function add_block_data(position, data) {
+    let prevObj = get_tip(blockchain, position)
+    if (prevObj === undefined) {
+        throw "add_block_data: invalid position"
+    }
+    let prevId = prevObj.id
+    let id = sha256(prevId + data)
+    if (id in id_to_pos) {
+        return id_to_pos[id]
+    }
+    let pos = add_tip(blockchain, position, {id: id, data: data, children: []})
+    id_to_pos[id] = pos
+    get_tip(blockchain, pos)["pos"] = pos
+    return pos
+}
+
+let g = d3.select("svg").append("g").attr("transform", "translate(80,0)")
+
+function update() {
+    let root = d3.hierarchy(blockchain);
+
+    let tree = d3.tree().size([800, 600]);
+
+    tree(root);
+
+    function linkPos(d) {
+        var ret = "M" + d.y + "," + d.x +
+            "C" + (d.parent.y + d.y)/2 + "," + d.x +
+            " " + (d.parent.y + d.y)/2 + "," + d.parent.x +
+            " " + d.parent.y + "," + d.parent.x;
+        return ret;
+    }
+
+    function linkPosInitial(d) {
+        var px = Math.random()*800;
+        var py = Math.random()*600;
+        var ret = "M" + py + "," + px +
+            "C" + py + "," + px +
+            " " + py + "," + px +
+            " " + py + "," + px;
+        return ret;
+    }
+
+    let link = g.selectAll(".link")
+        .data(root.descendants().slice(1), (d) => (d.data.id))
+
+    link.enter()
+        .append("path")
+        .attr("class", "link")
+        .attr("d", linkPosInitial)
+        .transition()
+        .duration(700)
+        .attr("d", linkPos);
+
+    /*
+    link.exit()
+      .transition()
+      .duration(700)
+      .style("opacity", 0)
+      .delay(700)
+      .remove();*/
+
+    link.transition()
+        .duration(700)
+        .attr("d", linkPos);
+
+    function nodePos (d) {
+        return "translate(" + d.y + "," + d.x + ")";
+    }
+
+    function parentNodePos (d) {
+        if (d.parent === null) {return nodePos(d)}
+        return "translate(" + d.parent.y + "," + d.parent.x + ")";
+    }
+
+    function displayText (d) {
+        return d.data.id.slice(0, 10);
+    }
+
+    var node = g.selectAll(".node")
+        .data(root.descendants(), (d) => (d.data.id))
+
+    var nodeEnter = node.enter()
+        .append("g")
+        .attr("class", "node")
+
+    // ENTER
+    nodeEnter.attr("transform", parentNodePos)
+        .transition()
+        .duration(700)
+        .attr("transform", nodePos);
+
+    nodeEnter.append("circle")
+        .attr("r", 8)
+        .attr("fill", "#999")
+        .on("click", function (d, i) {console.log(d, i)});
+
+    nodeEnter.append("text")
+        .attr("dy", 3)
+        .attr("font-size", "16px")
+        .text(displayText);
+
+    // UPDATE
+    node.transition()
+        .duration(700)
+        .attr("transform", nodePos);
+
+    node.selectAll("text")
+        .text(displayText);
+
+}
+
+function sleep() {
+    return new Promise(function(res, rej){
+        setTimeout(function () {
+            res()
+        }, 1000)
+    });
+}
+
+(async function () {
+    add_block_data([], "aaaa")
+    await sleep();
+    update();
+
+    add_block_data([], "aaab")
+    await sleep();
+    update();
+
+    add_block_data([], "aaac")
+    await sleep();
+    update();
+
+    add_block_data([], "aaad")
+    await sleep();
+    update();
+
+    add_block_data([0], "aaaa")
+    await sleep();
+    update();
+
+    add_block_data([0], "aaab")
+    await sleep();
+    update();
+
+    add_block_data([0], "aaac")
+    await sleep();
+    update();
+
+    add_block_data([], "aaaa2")
+    await sleep();
+    update();
+
+    add_block_data([], "aaab2")
+    await sleep();
+    update();
+
+    add_block_data([], "aaac2")
+    await sleep();
+    update();
+
+    add_block_data([], "aaad2")
+    await sleep();
+    update();
+
+    add_block_data([0,0], "aaaa2")
+    await sleep();
+    update();
+
+    add_block_data([0,1], "aaab2")
+    await sleep();
+    update();
+
+    add_block_data([0,2], "aaac2")
+    await sleep();
+    update();
+})();
+
+</script>
