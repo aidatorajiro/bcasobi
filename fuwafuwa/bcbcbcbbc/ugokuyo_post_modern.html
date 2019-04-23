@@ -3,6 +3,24 @@
 <svg width="800" height="3000"></svg>
 
 <style>
+* {
+    padding: 0px;
+    margin: 0px;
+}
+.dialog {
+    /*display: none;*/
+    width: 300px;
+    height: 300px;
+    border: 1px rgb(3, 23, 49) solid;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translateX(-50%) translateY(-50%);
+    text-align: center;
+    padding: 10px;
+    z-index: 100;
+    display: none;
+}
 .link {
     fill: none;
     stroke: #555;
@@ -10,6 +28,11 @@
     stroke-width: 1.5px;
 }
 </style>
+
+<div class="dialog">
+    <textarea id="textinput"></textarea>
+    <button id="postbutton">POSTBUTTON</button>
+</div>
 
 <script>
 let blockchain = {
@@ -140,7 +163,11 @@ function update() {
     nodeEnter.append("circle")
         .attr("r", 8)
         .attr("fill", "#999")
-        .on("click", function (d, i) {console.log(d, i)});
+        .on("click", async function (d, i) {
+            let text = await dialog();
+            add_block_data(d.data.pos, text)
+            update();
+        });
 
     nodeEnter.append("text")
         .attr("dy", 3)
@@ -157,69 +184,53 @@ function update() {
 
 }
 
+function dialog() {
+    d3.select(".dialog").style("display", "block");
+    return new Promise(function (acc, rej) {
+        d3.selectAll("#postbutton").on("click", function () {
+            d3.select(".dialog").style("display", "none");
+            acc(d3.selectAll("#textinput").node().value)
+        }).value
+    })
+}
+
 function sleep() {
-    return new Promise(function(res, rej){
+    return new Promise(function(acc, rej){
         setTimeout(function () {
-            res()
+            acc()
         }, 1000)
     });
 }
 
 (async function () {
     add_block_data([], "aaaa")
-    await sleep();
-    update();
 
     add_block_data([], "aaab")
-    await sleep();
-    update();
 
     add_block_data([], "aaac")
-    await sleep();
-    update();
 
     add_block_data([], "aaad")
-    await sleep();
-    update();
 
     add_block_data([0], "aaaa")
-    await sleep();
-    update();
 
     add_block_data([0], "aaab")
-    await sleep();
-    update();
 
     add_block_data([0], "aaac")
-    await sleep();
-    update();
 
     add_block_data([], "aaaa2")
-    await sleep();
-    update();
 
     add_block_data([], "aaab2")
-    await sleep();
-    update();
 
     add_block_data([], "aaac2")
-    await sleep();
-    update();
 
     add_block_data([], "aaad2")
-    await sleep();
-    update();
 
     add_block_data([0,0], "aaaa2")
-    await sleep();
-    update();
 
     add_block_data([0,1], "aaab2")
-    await sleep();
-    update();
 
     add_block_data([0,2], "aaac2")
-    await sleep();
+
     update();
 })();
 
