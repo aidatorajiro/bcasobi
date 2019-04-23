@@ -1,11 +1,18 @@
 <script src="https://d3js.org/d3.v5.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/js-sha256/0.9.0/sha256.min.js"></script>
-<svg width="800" height="3000"></svg>
 
 <style>
 * {
     padding: 0px;
     margin: 0px;
+}
+.textinput {
+    display: block;
+    width: 100%;
+    height: 100px;
+}
+.postbutton {
+
 }
 .dialog {
     /*display: none;*/
@@ -30,9 +37,11 @@
 </style>
 
 <div class="dialog">
-    <textarea id="textinput"></textarea>
-    <button id="postbutton">POSTBUTTON</button>
+    <textarea class="textinput"></textarea>
+    <button class="postbutton">POSTBUTTON</button>
 </div>
+
+<svg width="800" height="3000"></svg>
 
 <script>
 let blockchain = {
@@ -85,6 +94,10 @@ function add_block_data(position, data) {
 }
 
 let g = d3.select("svg").append("g").attr("transform", "translate(80,0)")
+
+d3.select("svg").append("defs")
+  .append("filter").attr("id", "blur")
+  .append("feGaussianBlur").attr("stdDeviation", 1);
 
 function update() {
     let root = d3.hierarchy(blockchain);
@@ -172,6 +185,7 @@ function update() {
     nodeEnter.append("text")
         .attr("dy", 3)
         .attr("font-size", "16px")
+        .attr("transform", "translate(10, 3)")
         .text(displayText);
 
     // UPDATE
@@ -186,10 +200,12 @@ function update() {
 
 function dialog() {
     d3.select(".dialog").style("display", "block");
+    g.attr("filter", "url(#blur)");
     return new Promise(function (acc, rej) {
-        d3.selectAll("#postbutton").on("click", function () {
+        d3.selectAll(".postbutton").on("click", function () {
             d3.select(".dialog").style("display", "none");
-            acc(d3.selectAll("#textinput").node().value)
+            g.attr("filter", "");
+            acc(d3.selectAll(".textinput").node().value)
         }).value
     })
 }
